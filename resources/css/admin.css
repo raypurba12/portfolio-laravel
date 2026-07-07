@@ -1,0 +1,4 @@
+/* Contoh animasi untuk sidebar */
+.sidebar-toggle {
+    transition: width 0.3s ease;
+}

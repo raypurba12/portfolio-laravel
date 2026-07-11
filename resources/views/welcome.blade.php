@@ -19,7 +19,7 @@
 @keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 .animate-gradient-x{background-size:200% 200%;animation:gradientX 3s ease infinite}
 @keyframes gradientX{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
-.meteor{position:absolute;width:2px;height:90px;background:linear-gradient(to bottom,rgba(168,85,247,.9),transparent);transform:rotate(35deg);animation:meteorFall 6s linear infinite;opacity:0;will-change:transform}
+.meteor{position:absolute;width:2px;height:90px;background:linear-gradient(to bottom,rgba(168,85,247,.9),transparent);transform:rotate(35deg);animation:meteorFall 6s linear infinite;opacity:0;will-change:transform;pointer-events:none}
 @keyframes meteorFall{0%{opacity:0;transform:translate(0,-100px) rotate(35deg)}10%{opacity:1}80%{opacity:1}100%{opacity:0;transform:translate(250px,400px) rotate(35deg)}}
 .shine-sweep{background:linear-gradient(120deg,transparent 20%,rgba(255,255,255,.15) 50%,transparent 80%);background-size:200% 200%;background-position:-100% 0;transition:background-position .9s ease,opacity .3s}
 .group:hover .shine-sweep{background-position:200% 0}
@@ -29,9 +29,16 @@
 .count-up{animation:countUp .5s ease forwards}
 
 /* ── Hero background media (image or video) ── */
-.hero-bg-media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hero-bg-media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}
+@media(max-width:767px){.hero-bg-media{object-position:30% center}}
+.hero-bg-video{object-position:center}
 @keyframes heroKenBurns{0%{transform:scale(1) translate(0,0)}100%{transform:scale(1.09) translate(-1.2%,-1%)}}
 .hero-bg-kenburns{animation:heroKenBurns 22s ease-in-out infinite alternate}
+@media(max-width:640px){.hero-bg-kenburns{animation:none}}
+
+/* ── Sound toggle ── */
+.sound-toggle{position:absolute;bottom:28px;right:24px;z-index:50;width:40px;height:40px;border-radius:9999px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.8);cursor:pointer;transition:all .3s ease;backdrop-filter:blur(6px);pointer-events:auto}
+.sound-toggle:hover{background:rgba(0,0,0,.75);color:#fff;border-color:rgba(168,85,247,.5);box-shadow:0 0 15px rgba(168,85,247,.2)}
 
 /* ── Lanyard ID card ── */
 .lanyard-hanger{width:60px;height:14px;border-radius:0 0 10px 10px;background:linear-gradient(to bottom,#1f2430,#0b0d12);box-shadow:0 2px 6px rgba(0,0,0,.5),inset 0 -2px 3px rgba(255,255,255,.05)}
@@ -40,7 +47,7 @@
     linear-gradient(90deg,#0b0d12 0%,rgba(0,0,0,0) 8%,rgba(0,0,0,0) 92%,#0b0d12 100%);
   box-shadow:inset 0 0 0 1px rgba(6,182,212,.25),0 4px 10px rgba(0,0,0,.35)}
 .lanyard-strap::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.18),transparent 30%)}
-.lanyard-strap::after{content:'CLAUDE • PORTFOLIO • CLAUDE • PORTFOLIO';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(90deg);white-space:nowrap;font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:2px;color:rgba(255,255,255,.55);width:200px;text-align:center}
+.lanyard-strap::after{content:'RAY • PORTFOLIO • RAY • PORTFOLIO';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(90deg);white-space:nowrap;font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:2px;color:rgba(255,255,255,.55);width:200px;text-align:center}
 .lanyard-clip{width:22px;height:22px;border-radius:9999px;margin:0 auto;position:relative;z-index:5;
   background:radial-gradient(circle at 35% 30%,#e5e7eb,#9ca3af 45%,#4b5563 100%);
   box-shadow:0 2px 4px rgba(0,0,0,.5),inset 0 0 0 2px rgba(255,255,255,.15)}
@@ -60,10 +67,35 @@
   background-size:250% 100%;animation:cardSheen 5s ease-in-out infinite}
 
 /* ── Skills Marquee ── */
-.skills-marquee-wrapper{overflow:hidden;mask-image:linear-gradient(to right,transparent,black 50px,black calc(100% - 50px),transparent);-webkit-mask-image:linear-gradient(to right,transparent,black 50px,black calc(100% - 50px),transparent)}
+.skills-marquee-wrapper{overflow-x:hidden;overflow-y:visible;padding:2.5rem 0;mask-image:linear-gradient(to right,transparent,black 50px,black calc(100% - 50px),transparent);-webkit-mask-image:linear-gradient(to right,transparent,black 50px,black calc(100% - 50px),transparent)}
 .skills-marquee-track{display:flex;gap:1.25rem;width:max-content;animation:scrollSkills 40s linear infinite}
 .skills-marquee-wrapper:hover .skills-marquee-track{animation-play-state:paused}
 @keyframes scrollSkills{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* Kartu skill: efek zoom dramatis saat hover */
+.skill-card-item{position:relative;transform-origin:center bottom;transition:transform .4s cubic-bezier(.34,1.56,.64,1),box-shadow .4s ease;will-change:transform}
+.skill-card-item:hover{transform:translateY(-14px) scale(1.15);box-shadow:0 15px 40px -10px rgba(168,85,247,.4);z-index:30}
+.skill-icon{transition:transform .45s cubic-bezier(.34,1.56,.64,1),filter .45s ease;will-change:transform}
+.skill-card-item:hover .skill-icon{transform:scale(1.7) rotate(-6deg);filter:drop-shadow(0 0 14px rgba(168,85,247,.8)) drop-shadow(0 0 28px rgba(6,182,212,.5));animation:skillWiggle 1.2s ease-in-out infinite}
+@keyframes skillWiggle{0%,100%{transform:scale(1.7) rotate(-6deg)}50%{transform:scale(1.85) rotate(5deg)}}
+
+/* ── FLIP 3D — KARTU SERTIFIKAT ── */
+.cert-flip-outer{perspective:1200px;transition:transform .3s ease}
+.cert-flip-outer:hover{transform:translateY(-6px)}
+.cert-flip-inner{position:relative;width:100%;height:100%;transition:transform .7s cubic-bezier(.4,.2,.2,1);transform-style:preserve-3d}
+.cert-flip-outer:hover .cert-flip-inner{transform:rotateY(180deg)}
+.cert-flip-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:flex;flex-direction:column}
+.cert-flip-back{transform:rotateY(180deg)}
+
+/* ── RGB GLITCH — GAMBAR PROJECT ── */
+.rgb-glitch{position:relative}
+.rgb-glitch::before,.rgb-glitch::after{content:'';position:absolute;inset:0;background-image:var(--glitch-bg);background-size:cover;background-position:center;opacity:0;mix-blend-mode:screen;pointer-events:none}
+.rgb-glitch::before{background-color:rgba(255,0,90,.55)}
+.rgb-glitch::after{background-color:rgba(0,220,255,.55)}
+.group:hover .rgb-glitch::before{opacity:.5;animation:glitchShiftRed .35s steps(2,end) 2}
+.group:hover .rgb-glitch::after{opacity:.5;animation:glitchShiftCyan .35s steps(2,end) 2}
+@keyframes glitchShiftRed{0%{transform:translate(0,0)}25%{transform:translate(-5px,2px)}50%{transform:translate(4px,-2px)}75%{transform:translate(-2px,1px)}100%{transform:translate(0,0)}}
+@keyframes glitchShiftCyan{0%{transform:translate(0,0)}25%{transform:translate(5px,-2px)}50%{transform:translate(-4px,2px)}75%{transform:translate(2px,-1px)}100%{transform:translate(0,0)}}
 </style>
 
 {{-- ════════════════════════════════════════════════════ --}}
@@ -105,72 +137,94 @@
         }
     @endphp
 
-    @php $durations = $slides->map(fn($s) => $s->duration ?? 6500)->toJson(); @endphp
+    @php
+        $durations = $slides->map(fn($s) => $s->duration ?? 6500)->toJson();
+        $hasVideo = $slides->contains(fn($s) => ($s->type ?? 'image') === 'video');
+    @endphp
 
     @if($slides->isNotEmpty())
+    @php $hasVideo = $slides->contains(fn($s) => ($s->type ?? 'image') === 'video'); @endphp
     <div class="absolute inset-0 z-0 overflow-hidden bg-gray-950"
-         x-data="{
-             active: 0,
-             count: {{ $slides->count() }},
-             durations: {{ $durations }},
-             timer: null,
-             init(){
-                 if(this.count > 1) this.next();
-             },
-             next(){
-                 clearInterval(this.timer);
-                 this.timer = setInterval(() => {
-                     this.active = (this.active + 1) % this.count;
-                     this.next();
-                 }, this.durations[this.active]);
-             },
-             goTo(i){
-                 this.active = i;
+     x-data="{
+         active: 0,
+         count: {{ $slides->count() }},
+         durations: {{ $durations }},
+         timer: null,
+         isMuted: true,
+         init(){
+             if(this.count > 1) this.next();
+             this.$watch('isMuted', val => {
+                 this.$el.querySelectorAll('video').forEach(v => v.muted = val);
+             });
+         },
+         next(){
+             clearInterval(this.timer);
+             this.timer = setInterval(() => {
+                 this.active = (this.active + 1) % this.count;
                  this.next();
-             },
-             destroy(){ clearInterval(this.timer); }
-         }">
+             }, this.durations[this.active]);
+         },
+         goTo(i){
+             this.active = i;
+             this.next();
+         },
+         toggleMute(){
+             this.isMuted = !this.isMuted;
+         },
+         destroy(){ clearInterval(this.timer); }
+     }">
+    @foreach($slides as $i => $slide)
+    <div class="absolute inset-0 transition-opacity duration-[1500ms] ease-in-out"
+         :class="active === {{ $i }} ? 'opacity-100 z-[1]' : 'opacity-0 z-0'">
+        <template x-if="active === {{ $i }}">
+            <div class="absolute inset-0">
+                @if(($slide->type ?? 'image') === 'video')
+                    <video class="hero-bg-media hero-bg-video" autoplay muted loop playsinline preload="auto"
+                           x-init="$el.muted = isMuted"
+                           @if(!empty($slide->poster)) poster="{{ $slide->poster }}" @endif>
+                        <source src="{{ $slide->url }}" type="video/mp4">
+                    </video>
+                @else
+                    <img src="{{ $slide->url }}" alt="" class="hero-bg-media hero-bg-kenburns" loading="{{ $i === 0 ? 'eager' : 'lazy' }}" width="1920" height="1080">
+                @endif
+            </div>
+        </template>
+    </div>
+    @endforeach
+
+    <div class="absolute inset-0 z-[2] bg-gradient-to-b from-gray-950/70 via-gray-950/50 to-gray-950 pointer-events-none"></div>
+    <div class="absolute inset-0 z-[2] bg-gradient-to-t from-gray-950 via-transparent to-transparent pointer-events-none"></div>
+
+    @if($slides->count() > 1)
+    <div class="absolute bottom-24 left-1/2 -translate-x-1/2 z-[3] flex gap-2">
         @foreach($slides as $i => $slide)
-        <div class="absolute inset-0 transition-opacity duration-[1500ms] ease-in-out"
-             :class="active === {{ $i }} ? 'opacity-100 z-[1]' : 'opacity-0 z-0'">
-            <template x-if="active === {{ $i }}">
-                <div class="absolute inset-0">
-                    @if(($slide->type ?? 'image') === 'video')
-                        <video class="hero-bg-media" autoplay muted loop playsinline preload="auto"
-                               @if(!empty($slide->poster)) poster="{{ $slide->poster }}" @endif>
-                            <source src="{{ $slide->url }}" type="video/mp4">
-                        </video>
-                    @else
-                        <img src="{{ $slide->url }}" alt="" class="hero-bg-media hero-bg-kenburns" loading="{{ $i === 0 ? 'eager' : 'lazy' }}" width="1920" height="1080">
-                    @endif
-                </div>
-            </template>
-        </div>
+        <button type="button" @click="goTo({{ $i }})"
+                class="h-1.5 rounded-full transition-all duration-300"
+                :class="active === {{ $i }} ? 'w-8 bg-purple-400' : 'w-1.5 bg-white/30 hover:bg-white/50'"
+                aria-label="Slide {{ $i + 1 }}"></button>
         @endforeach
-
-        <div class="absolute inset-0 z-[2] bg-gradient-to-b from-gray-950/70 via-gray-950/50 to-gray-950"></div>
-        <div class="absolute inset-0 z-[2] bg-gradient-to-t from-gray-950 via-transparent to-transparent"></div>
-
-        @if($slides->count() > 1)
-        <div class="absolute bottom-24 left-1/2 -translate-x-1/2 z-[3] flex gap-2">
-            @foreach($slides as $i => $slide)
-            <button type="button" @click="goTo({{ $i }})"
-                    class="h-1.5 rounded-full transition-all duration-300"
-                    :class="active === {{ $i }} ? 'w-8 bg-purple-400' : 'w-1.5 bg-white/30 hover:bg-white/50'"
-                    aria-label="Slide {{ $i + 1 }}"></button>
-            @endforeach
-        </div>
-        @endif
     </div>
     @endif
 
-    <div class="absolute inset-0 cyber-grid opacity-40 z-0"
+    @if($hasVideo)
+    <button type="button" @click="toggleMute()"
+            class="sound-toggle"
+            :title="isMuted ? 'Aktifkan suara' : 'Matikan suara'"
+            aria-label="Toggle sound">
+        <svg x-show="isMuted" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+        <svg x-show="!isMuted" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+    </button>
+    @endif
+</div>
+    @endif
+
+    <div class="absolute inset-0 cyber-grid opacity-40 z-0 pointer-events-none"
          :style="`transform:translate(${mx*8}px,${my*8}px)`"
          style="transition:transform .2s ease-out"></div>
 
-    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl animate-pulse z-0"
+    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl animate-pulse z-0 pointer-events-none"
          :style="`transform:translate(${mx*-20}px,${my*-20}px)`" style="transition:transform .3s ease-out"></div>
-    <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-cyan-600/20 rounded-full blur-3xl animate-pulse z-0"
+    <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-cyan-600/20 rounded-full blur-3xl animate-pulse z-0 pointer-events-none"
          style="animation-delay:1.5s"
          :style="`transform:translate(${mx*20}px,${my*20}px)`"
          x-bind:style="`transform:translate(${mx*20}px,${my*20}px);transition:transform .3s ease-out`"></div>
@@ -224,7 +278,11 @@
             <div class="flex flex-wrap gap-4 justify-center lg:justify-start">
                 @if($hero->github_url)
                 <a href="{{ $hero->github_url }}" target="_blank"
-                   class="group relative flex items-center gap-2 border border-purple-500/50 hover:border-purple-400 text-gray-300 hover:text-white font-semibold py-3 px-6 rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-purple-500/20">
+                   class="magnetic-btn group relative flex items-center gap-2 border border-purple-500/50 hover:border-purple-400 text-gray-300 hover:text-white font-semibold py-3 px-6 rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20"
+                   x-data="{ tx:0, ty:0 }"
+                   @mousemove="const r=$el.getBoundingClientRect(); tx=($event.clientX-r.left-r.width/2)*0.35; ty=($event.clientY-r.top-r.height/2)*0.35"
+                   @mouseleave="tx=0; ty=0"
+                   :style="`transform:translate(${tx}px, ${ty}px)`">
                     <div class="absolute inset-0 bg-purple-600/0 group-hover:bg-purple-600/20 transition-all duration-300"></div>
                     <svg class="w-5 h-5 relative z-10" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
                     <span class="relative z-10">GitHub</span>
@@ -232,14 +290,22 @@
                 @endif
                 @if($hero->linkedin_url)
                 <a href="{{ $hero->linkedin_url }}" target="_blank"
-                   class="group relative flex items-center gap-2 border border-cyan-500/50 hover:border-cyan-400 text-gray-300 hover:text-white font-semibold py-3 px-6 rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/20">
+                   class="magnetic-btn group relative flex items-center gap-2 border border-cyan-500/50 hover:border-cyan-400 text-gray-300 hover:text-white font-semibold py-3 px-6 rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/20"
+                   x-data="{ tx:0, ty:0 }"
+                   @mousemove="const r=$el.getBoundingClientRect(); tx=($event.clientX-r.left-r.width/2)*0.35; ty=($event.clientY-r.top-r.height/2)*0.35"
+                   @mouseleave="tx=0; ty=0"
+                   :style="`transform:translate(${tx}px, ${ty}px)`">
                     <div class="absolute inset-0 bg-cyan-600/0 group-hover:bg-cyan-600/20 transition-all duration-300"></div>
                     <span class="relative z-10">LinkedIn</span>
                 </a>
                  @endif
                 @if($hero->cv_url && $hero->cv_url !== '#')
                 <a href="{{ $hero->cv_url }}" target="_blank"
-                   class="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-bold py-3 px-7 rounded-xl transition-all duration-300 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-105 animate-glow-pulse">
+                   class="magnetic-btn flex items-center gap-2 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-bold py-3 px-7 rounded-xl transition-all duration-300 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 animate-glow-pulse"
+                   x-data="{ tx:0, ty:0 }"
+                   @mousemove="const r=$el.getBoundingClientRect(); tx=($event.clientX-r.left-r.width/2)*0.35; ty=($event.clientY-r.top-r.height/2)*0.35"
+                   @mouseleave="tx=0; ty=0"
+                   :style="`transform:translate(${tx}px, ${ty}px)`">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     Download CV
                 </a>
@@ -256,18 +322,14 @@
             {{-- fixed hanger rail (does not swing) --}}
             <div class="lanyard-hanger relative z-10"></div>
 
-            {{--
-                Fisika lanyard v2:
-                - kecepatan dihitung dari histori posisi pointer (bukan delta sesaat) -> jauh lebih halus & natural
-                - saat dilepas, ada efek "lempar" (fling) sesuai kecepatan tarikan terakhir
-                - redaman & pegas dibuat lebih lembut supaya ayunan terasa berat seperti lanyard asli
-                - requestAnimationFrame di-cancel saat elemen dilepas agar tidak bocor memori
-            --}}
             <div class="relative"
                  style="transform-origin: top center; touch-action:none;"
                  x-data="{
-                     angle:5, vel:0, dragging:false,
-                     lastX:0, history:[], raf:null,
+                     x:0, y:0, angle:5,
+                     vx:0, vy:0, vAngle:0,
+                     dragging:false,
+                     startX:0, startY:0,
+                     history:[], raf:null,
                      init(){
                          this.raf = requestAnimationFrame(()=>this.loop());
                          this.$el.addEventListener('pointerdown', this.startDrag.bind(this));
@@ -276,26 +338,30 @@
                      loop(){
                          if(!this.dragging){
                              const now = performance.now();
-                             const wind = Math.sin(now/2600) * 0.006 + Math.sin(now/970) * 0.003;
-                             const restoring = -this.angle * 0.011;
-                             const damping = -this.vel * 0.055;
-                             this.vel += restoring + damping + wind;
-                             this.angle += this.vel;
+                             const wind = Math.sin(now/2200)*0.35 + Math.sin(now/850)*0.18;
+                             this.vx = (this.vx - this.x*0.05 + wind*0.05) * 0.92;
+                             this.x += this.vx;
+                             this.vy = (this.vy - this.y*0.045) * 0.92;
+                             this.y += this.vy;
+                             this.vAngle = (this.vAngle - this.angle*0.045 + wind*0.06) * 0.93;
+                             this.angle += this.vAngle;
                          }
                          this.raf = requestAnimationFrame(()=>this.loop());
                      },
                      startDrag(e){
-                         this.dragging = true; this.vel = 0;
-                         this.lastX = e.clientX;
-                         this.history = [{x:e.clientX, t:performance.now()}];
+                         this.dragging = true;
+                         this.vx = 0; this.vy = 0; this.vAngle = 0;
+                         this.startX = e.clientX - this.x;
+                         this.startY = e.clientY - this.y;
+                         this.history = [{x:e.clientX, y:e.clientY, t:performance.now()}];
                          e.preventDefault();
                      },
                      onDrag(e){
                          if(!this.dragging) return;
-                         const dx = e.clientX - this.lastX;
-                         this.angle = Math.max(-60, Math.min(60, this.angle + dx * 0.4));
-                         this.lastX = e.clientX;
-                         this.history.push({x:e.clientX, t:performance.now()});
+                         this.x = Math.max(-100, Math.min(100, e.clientX - this.startX));
+                         this.y = Math.max(-40, Math.min(150, e.clientY - this.startY));
+                         this.angle = Math.max(-45, Math.min(45, this.x * 0.35));
+                         this.history.push({x:e.clientX, y:e.clientY, t:performance.now()});
                          if(this.history.length > 6) this.history.shift();
                      },
                      endDrag(){
@@ -305,15 +371,16 @@
                              const first = this.history[0];
                              const last = this.history[this.history.length - 1];
                              const dt = Math.max(last.t - first.t, 16);
-                             const speed = (last.x - first.x) / dt;
-                             this.vel = Math.max(-8, Math.min(8, speed * 4));
+                             this.vx = Math.max(-28, Math.min(28, (last.x - first.x) / dt * 11));
+                             this.vy = Math.max(-28, Math.min(28, (last.y - first.y) / dt * 11));
+                             this.vAngle = Math.max(-12, Math.min(12, this.vx * 0.15));
                          }
                      }
                  }"
                  @pointermove.window="onDrag"
                  @pointerup.window="endDrag"
                  @pointercancel.window="endDrag"
-                 :style="`transform: rotate(${angle}deg); cursor:${dragging ? 'grabbing' : 'grab'}`">
+                 :style="`transform: translate(${x}px, ${y}px) rotate(${angle}deg); cursor:${dragging ? 'grabbing' : 'grab'}`">
 
                 {{-- strap --}}
                 <div class="lanyard-strap h-32 md:h-40 rounded-b-sm"></div>
@@ -368,7 +435,7 @@
     <div class="container mx-auto px-6 max-w-6xl relative z-10">
         <div class="text-center mb-16" data-aos="fade-up">
             <span class="font-orbitron text-xs text-purple-400 tracking-widest uppercase mb-2 block">[ WHO AM I ]</span>
-            <h2 class="font-orbitron font-bold text-4xl md:text-5xl text-white mb-4">
+            <h2 class="font-orbitron font-bold text-4xl md:text-5xl text-white mb-4 glitch-heading" data-text="About Me">
                 About <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">Me</span>
             </h2>
             <div class="w-24 h-0.5 bg-gradient-to-r from-purple-500 to-cyan-500 mx-auto"></div>
@@ -425,7 +492,7 @@
     <div class="container mx-auto px-6 relative z-10">
         <div class="text-center mb-16" data-aos="fade-up">
             <span class="font-orbitron text-xs text-purple-400 tracking-widest uppercase mb-2 block">[ WHAT I DO ]</span>
-            <h2 class="font-orbitron font-bold text-4xl md:text-5xl text-white mb-4">
+            <h2 class="font-orbitron font-bold text-4xl md:text-5xl text-white mb-4 glitch-heading" data-text="My Services">
                 My <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">Services</span>
             </h2>
             <div class="w-24 h-0.5 bg-gradient-to-r from-purple-500 to-cyan-500 mx-auto"></div>
@@ -467,7 +534,7 @@
     <div class="container mx-auto px-6 relative z-10">
         <div class="text-center mb-16" data-aos="fade-up">
             <span class="font-orbitron text-xs text-cyan-400 tracking-widest uppercase mb-2 block">[ MY ARSENAL ]</span>
-            <h2 class="font-orbitron font-bold text-4xl md:text-5xl text-white mb-4">
+            <h2 class="font-orbitron font-bold text-4xl md:text-5xl text-white mb-4 glitch-heading" data-text="Tech Skills">
                 Tech <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">Skills</span>
             </h2>
             <div class="w-24 h-0.5 bg-gradient-to-r from-purple-500 to-cyan-500 mx-auto"></div>
@@ -476,10 +543,14 @@
         <div class="skills-marquee-wrapper" data-aos="fade-up">
             <div class="skills-marquee-track">
                 @foreach($skills as $skill)
-                @include('components.skill-card', ['skill' => $skill])
+                <div class="skill-item">
+                    @include('components.skill-card', ['skill' => $skill])
+                </div>
                 @endforeach
                 @foreach($skills as $skill)
-                @include('components.skill-card', ['skill' => $skill])
+                <div class="skill-item">
+                    @include('components.skill-card', ['skill' => $skill])
+                </div>
                 @endforeach
             </div>
         </div>
@@ -498,7 +569,7 @@
     <div class="container mx-auto px-6 relative z-10">
         <div class="text-center mb-16" data-aos="fade-up">
             <span class="font-orbitron text-xs text-purple-400 tracking-widest uppercase mb-2 block">[ MY WORK ]</span>
-            <h2 class="font-orbitron font-bold text-4xl md:text-5xl text-white mb-4">
+            <h2 class="font-orbitron font-bold text-4xl md:text-5xl text-white mb-4 glitch-heading" data-text="Featured Projects">
                 Featured <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">Projects</span>
             </h2>
             <div class="w-24 h-0.5 bg-gradient-to-r from-purple-500 to-cyan-500 mx-auto mb-4"></div>
@@ -514,7 +585,8 @@
                @mouseleave="rx=0;ry=0"
                :style="`transform:perspective(1000px) rotateX(${rx}deg) rotateY(${ry}deg);transition:transform .15s ease-out`">
 
-                <div class="relative overflow-hidden h-52">
+                <div class="relative overflow-hidden h-52 rgb-glitch"
+                     @if($project->thumbnail_url) style="--glitch-bg:url('{{ $project->thumbnail_url }}')" @endif>
                     @if($project->thumbnail_url)
                     <img src="{{ $project->thumbnail_url }}" alt="{{ $project->title }}"
                          class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" width="416" height="208">
@@ -583,7 +655,7 @@
     <div class="container mx-auto px-6 relative z-10 max-w-5xl">
         <div class="text-center mb-20" data-aos="fade-up">
             <span class="font-orbitron text-xs text-purple-400 tracking-widest uppercase mb-2 block">[ MY PATH ]</span>
-            <h2 class="font-orbitron font-bold text-4xl md:text-5xl text-white mb-4">
+            <h2 class="font-orbitron font-bold text-4xl md:text-5xl text-white mb-4 glitch-heading" data-text="Career Journey">
                 Career <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">Journey</span>
             </h2>
             <div class="w-24 h-0.5 bg-gradient-to-r from-purple-500 to-cyan-500 mx-auto"></div>
@@ -662,7 +734,7 @@
     <div class="container mx-auto px-6 relative z-10">
         <div class="text-center mb-16" data-aos="fade-up">
             <span class="font-orbitron text-xs text-cyan-400 tracking-widest uppercase mb-2 block">[ ACHIEVEMENTS ]</span>
-            <h2 class="font-orbitron font-bold text-4xl md:text-5xl text-white mb-4">
+            <h2 class="font-orbitron font-bold text-4xl md:text-5xl text-white mb-4 glitch-heading" data-text="Licenses & Certifications">
                 Licenses & <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">Certifications</span>
             </h2>
             <div class="w-24 h-0.5 bg-gradient-to-r from-purple-500 to-cyan-500 mx-auto"></div>
@@ -670,29 +742,45 @@
         
         <div class="flex flex-wrap justify-center gap-6">
             @foreach($certificates as $cert)
-            <div class="cyber-card group w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] bg-gray-900/60 border border-purple-500/10 rounded-2xl overflow-hidden hover:border-purple-400/40 transition-all duration-300 hover:-translate-y-1"
+            <div class="cert-flip-outer h-[340px] w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]"
                  data-aos="zoom-in" data-aos-delay="{{ ($loop->index%3)*100 }}">
-                @if($cert->image_path)
-                <div class="h-40 overflow-hidden border-b border-purple-500/10 relative">
-                    <img src="{{ asset('storage/' . str_replace('public/', '', $cert->image_path)) }}" alt="{{ $cert->name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" width="400" height="160">
-                    <div class="absolute inset-0 bg-gray-950/20 group-hover:bg-transparent transition-colors"></div>
-                </div>
-                @endif
-                <div class="p-6">
-                    <h3 class="font-bold text-lg text-white mb-1 leading-tight group-hover:text-cyan-400 transition-colors">{{ $cert->name }}</h3>
-                    <p class="text-purple-400 text-sm font-medium mb-3">{{ $cert->issuer }}</p>
-                    <div class="flex items-center justify-between text-xs text-gray-500 font-orbitron mb-4">
-                        <span>Issued: {{ \Carbon\Carbon::parse($cert->issue_date)->format('M Y') }}</span>
-                        @if($cert->expiration_date)
-                        <span>Expires: {{ \Carbon\Carbon::parse($cert->expiration_date)->format('M Y') }}</span>
+                <div class="cert-flip-inner">
+
+                    {{-- FRONT --}}
+                    <div class="cert-flip-face cert-flip-front bg-gray-900/60 border border-purple-500/10 rounded-2xl overflow-hidden">
+                        @if($cert->image_path)
+                        <div class="h-44 overflow-hidden border-b border-purple-500/10 relative flex-shrink-0">
+                            <img src="{{ asset('storage/' . str_replace('public/', '', $cert->image_path)) }}"
+                                 alt="{{ $cert->name }}" class="w-full h-full object-cover" loading="lazy" width="400" height="176">
+                            <div class="absolute inset-0 bg-gray-950/20"></div>
+                        </div>
+                        @endif
+                        <div class="p-5 flex-1 flex flex-col">
+                            <h3 class="font-bold text-lg text-white leading-tight">{{ $cert->name }}</h3>
+                            <p class="text-purple-400 text-sm font-medium mt-1">{{ $cert->issuer }}</p>
+                            <span class="mt-auto text-[11px] text-gray-500 font-orbitron tracking-wider">HOVER UNTUK DETAIL →</span>
+                        </div>
+                    </div>
+
+                    {{-- BACK --}}
+                    <div class="cert-flip-face cert-flip-back bg-gray-900/95 border border-cyan-400/30 rounded-2xl p-6 justify-center">
+                        <h3 class="font-bold text-lg text-white mb-1">{{ $cert->name }}</h3>
+                        <p class="text-cyan-300 text-sm font-medium mb-4">{{ $cert->issuer }}</p>
+                        <div class="flex items-center justify-between text-xs text-gray-400 font-orbitron mb-5">
+                            <span>Issued: {{ \Carbon\Carbon::parse($cert->issue_date)->format('M Y') }}</span>
+                            @if($cert->expiration_date)
+                            <span>Expires: {{ \Carbon\Carbon::parse($cert->expiration_date)->format('M Y') }}</span>
+                            @endif
+                        </div>
+                        @if($cert->credential_url)
+                        <a href="{{ $cert->credential_url }}" target="_blank"
+                           class="inline-flex items-center gap-2 text-xs font-semibold text-white bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg transition-colors border border-white/10 hover:border-cyan-500/50 w-full justify-center">
+                            View Credential
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                        </a>
                         @endif
                     </div>
-                    @if($cert->credential_url)
-                    <a href="{{ $cert->credential_url }}" target="_blank" class="inline-flex items-center gap-2 text-xs font-semibold text-white bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg transition-colors border border-white/10 hover:border-cyan-500/50 w-full justify-center">
-                        View Credential
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                    </a>
-                    @endif
+
                 </div>
             </div>
             @endforeach
@@ -712,7 +800,7 @@
         <div class="max-w-5xl mx-auto">
             <div class="text-center">
                 <span class="font-orbitron text-xs text-cyan-400 tracking-widest uppercase mb-2 block">[ LET'S CONNECT ]</span>
-                <h2 class="font-orbitron font-bold text-4xl md:text-5xl text-white mb-4">
+                <h2 class="font-orbitron font-bold text-4xl md:text-5xl text-white mb-4 glitch-heading" data-text="Get In Touch">
                     Get In <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">Touch</span>
                 </h2>
                 <div class="w-24 h-0.5 bg-gradient-to-r from-purple-500 to-cyan-500 mx-auto mb-8"></div>

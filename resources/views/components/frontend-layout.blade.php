@@ -32,6 +32,7 @@
     <style>
         :root { color-scheme: dark; }
         body { font-family: 'Space Grotesk', sans-serif; background: #030712; color: #f3f4f6; }
+        @media (pointer:fine) { body { cursor: none; } }
         .font-orbitron { font-family: 'Orbitron', monospace; }
 
         /* ── Glitch ── */
@@ -133,9 +134,96 @@
         .chat-scroll::-webkit-scrollbar { width: 4px; }
         .chat-scroll::-webkit-scrollbar-track { background: #1f2937; }
         .chat-scroll::-webkit-scrollbar-thumb { background: #7c3aed; border-radius: 4px; }
+
+        /* ── Custom Cursor ── */
+        .cyber-cursor-dot, .cyber-cursor-ring {
+            position: fixed; top: 0; left: 0; pointer-events: none; z-index: 99999;
+            border-radius: 50%; will-change: transform;
+            transition: width .25s, height .25s, background .25s, border-color .25s;
+        }
+        .cyber-cursor-dot {
+            width: 6px; height: 6px; background: #a855f7;
+            box-shadow: 0 0 10px #a855f7, 0 0 20px rgba(168,85,247,.4);
+        }
+        .cyber-cursor-ring {
+            width: 36px; height: 36px; border: 2px solid rgba(168,85,247,.6);
+            box-shadow: 0 0 15px rgba(168,85,247,.2), inset 0 0 10px rgba(168,85,247,.1);
+        }
+        .cyber-cursor-dot.is-hover { width: 10px; height: 10px; background: #06b6d4; box-shadow: 0 0 15px #06b6d4; }
+        .cyber-cursor-ring.is-hover { width: 52px; height: 52px; border-color: #06b6d4; background: rgba(6,182,212,.08); }
+
+        /* ── Preloader Boot-up ── */
+        .boot-preloader {
+            position: fixed; inset: 0; z-index: 99998;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: #030712; color: #a855f7;
+            font-family: 'Orbitron', monospace;
+            transition: opacity .6s ease, visibility .6s ease;
+        }
+        .boot-preloader.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .boot-logo { font-size: 1.8rem; font-weight: 900; letter-spacing: 4px; margin-bottom: 2rem;
+            background: linear-gradient(90deg,#a855f7,#06b6d4,#a855f7); background-size: 200% auto;
+            -webkit-background-clip: text; background-clip: text; color: transparent; animation: shimmer 3s linear infinite; }
+        .boot-lines { width: 320px; max-width: 80vw; }
+        .boot-line { font-size: .75rem; color: rgba(168,85,247,.7); opacity: 0;
+            animation: bootType .4s ease forwards; animation-delay: var(--d); }
+        .boot-line::after { content: '▌'; animation: blinkCursor .7s step-end infinite; }
+        @keyframes bootType { to { opacity: 1; } }
+        @keyframes blinkCursor { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+        .boot-bar { margin-top: 1.5rem; width: 320px; max-width: 80vw; height: 3px;
+            background: rgba(168,85,247,.2); border-radius: 3px; overflow: hidden; }
+        .boot-bar-fill { height: 100%; width: 0; border-radius: 3px;
+            background: linear-gradient(90deg,#a855f7,#06b6d4);
+            animation: bootFill 2.2s ease forwards; }
+        @keyframes bootFill { 0% { width: 0; } 30% { width: 30%; } 70% { width: 75%; } 100% { width: 100%; } }
+
+        /* ── Glitch-in Heading ── */
+        .glitch-heading { position: relative; }
+        .glitch-heading::before, .glitch-heading::after {
+            content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; opacity: 0; transition: opacity .3s;
+        }
+        .glitch-heading.in-view::before {
+            opacity: 1; color: #a855f7;
+            clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+            animation: glitchBefore .6s ease forwards;
+        }
+        .glitch-heading.in-view::after {
+            opacity: 1; color: #06b6d4;
+            clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+            animation: glitchAfter .6s ease forwards;
+        }
+        @keyframes glitchBefore {
+            0% { transform: translateX(-8px); opacity: 0; }
+            30% { transform: translateX(4px); opacity: .8; }
+            60% { transform: translateX(-2px); opacity: 1; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes glitchAfter {
+            0% { transform: translateX(8px); opacity: 0; }
+            30% { transform: translateX(-4px); opacity: .8; }
+            60% { transform: translateX(2px); opacity: 1; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
     </style>
 </head>
 <body class="antialiased overflow-x-hidden">
+
+{{-- ══════════════════════════════════════════════════════
+     PRELOADER BOOT-UP
+╘═════════════════════════════════════════════════════════ --}}
+<div class="boot-preloader"
+     x-data="{ hidden: false }"
+     x-init="window.addEventListener('load', () => { setTimeout(() => hidden = true, 2200); })"
+     :class="{ 'is-hidden': hidden }">
+    <div class="boot-logo">{{ strtoupper($settings['site_title'] ?? 'PORTFOLIO') }}</div>
+    <div class="boot-lines">
+        <div class="boot-line" style="--d:0s">&gt; initializing system core...</div>
+        <div class="boot-line" style="--d:.6s">&gt; loading assets &amp; modules...</div>
+        <div class="boot-line" style="--d:1.2s">&gt; access granted. welcome.</div>
+    </div>
+    <div class="boot-bar"><div class="boot-bar-fill"></div></div>
+</div>
 
 <!-- ═══════════════════════════════════════════
      NAVBAR
@@ -325,6 +413,55 @@
 </div>
 
 
+
+<div class="cyber-cursor-dot" id="cyberCursorDot"></div>
+<div class="cyber-cursor-ring" id="cyberCursorRing"></div>
+
+<script>
+(function(){
+    if (!window.matchMedia('(pointer:fine)').matches) return;
+    const dot = document.getElementById('cyberCursorDot');
+    const ring = document.getElementById('cyberCursorRing');
+    let mx = 0, my = 0, rx = 0, ry = 0;
+    window.addEventListener('mousemove', e => {
+        mx = e.clientX; my = e.clientY;
+        dot.style.transform = `translate(${mx}px, ${my}px) translate(-50%,-50%)`;
+    });
+    function loop(){
+        rx += (mx - rx) * 0.18;
+        ry += (my - ry) * 0.18;
+        ring.style.transform = `translate(${rx}px, ${ry}px) translate(-50%,-50%)`;
+        requestAnimationFrame(loop);
+    }
+    loop();
+    document.addEventListener('mouseover', e => {
+        if (e.target.closest('a, button, .cyber-card, [role="button"], input, textarea')) {
+            dot.classList.add('is-hover');
+            ring.classList.add('is-hover');
+        }
+    });
+    document.addEventListener('mouseout', e => {
+        if (e.target.closest('a, button, .cyber-card, [role="button"], input, textarea')) {
+            dot.classList.remove('is-hover');
+            ring.classList.remove('is-hover');
+        }
+    });
+})();
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const io = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('in-view');
+                io.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.4 });
+    document.querySelectorAll('.glitch-heading').forEach(el => io.observe(el));
+});
+</script>
 
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js" defer></script>
 <script defer>

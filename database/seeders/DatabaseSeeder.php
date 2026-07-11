@@ -29,12 +29,13 @@ class DatabaseSeeder extends Seeder
             ExperienceSeeder::class,
             SocialMediaSeeder::class,
             SettingSeeder::class,
+            HeroBackgroundSeeder::class,
         ]);
 
-        $user = User::factory()->create([
-            'name' => 'Admin',
-            'email' => 'admin@example.com',
-        ]);
+        $user = User::firstOrCreate(
+            ['email' => 'admin@example.com'],
+            ['name' => 'Admin', 'password' => bcrypt('password')]
+        );
 
         $user->assignRole('Admin');
     }

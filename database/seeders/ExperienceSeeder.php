@@ -44,7 +44,10 @@ class ExperienceSeeder extends Seeder
         ];
 
         foreach ($items as $item) {
-            Experience::create($item);
+            Experience::firstOrCreate(
+                ['company' => $item['company'], 'position' => $item['position'], 'start_date' => $item['start_date']],
+                $item,
+            );
         }
     }
 }

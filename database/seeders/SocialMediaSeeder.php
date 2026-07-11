@@ -22,7 +22,10 @@ class SocialMediaSeeder extends Seeder
         ];
 
         foreach ($items as $item) {
-            SocialMedia::create($item);
+            SocialMedia::firstOrCreate(
+                ['platform' => $item['platform']],
+                $item,
+            );
         }
     }
 }

@@ -44,7 +44,10 @@ class EducationSeeder extends Seeder
         ];
 
         foreach ($items as $item) {
-            Education::create($item);
+            Education::firstOrCreate(
+                ['institution' => $item['institution'], 'degree' => $item['degree']],
+                $item,
+            );
         }
     }
 }

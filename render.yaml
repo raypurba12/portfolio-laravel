@@ -1,0 +1,53 @@
+services:
+  - type: web
+    name: portfolio-laravel
+    runtime: image
+    plan: free
+    branch: main
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_URL
+        fromService:
+          name: portfolio-laravel
+          type: web
+          property: url
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromService:
+          name: portfolio-db
+          type: pgsql
+          property: host
+      - key: DB_PORT
+        fromService:
+          name: portfolio-db
+          type: pgsql
+          property: port
+      - key: DB_DATABASE
+        fromService:
+          name: portfolio-db
+          type: pgsql
+          property: database
+      - key: DB_USERNAME
+        fromService:
+          name: portfolio-db
+          type: pgsql
+          property: user
+      - key: DB_PASSWORD
+        fromService:
+          name: portfolio-db
+          type: pgsql
+          property: password
+
+databases:
+  - name: portfolio-db
+    plan: free
+    databaseName: portfolio
+    user: portfolio

@@ -51,7 +51,10 @@ class ServiceSeeder extends Seeder
 
         foreach ($items as $item) {
             $item['is_active'] = true;
-            Service::create($item);
+            Service::firstOrCreate(
+                ['name' => $item['name']],
+                $item,
+            );
         }
     }
 }

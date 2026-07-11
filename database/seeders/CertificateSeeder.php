@@ -38,7 +38,10 @@ class CertificateSeeder extends Seeder
         ];
 
         foreach ($items as $item) {
-            Certificate::create($item);
+            Certificate::firstOrCreate(
+                ['number' => $item['number']],
+                $item,
+            );
         }
     }
 }

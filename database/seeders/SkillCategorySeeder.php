@@ -24,10 +24,10 @@ class SkillCategorySeeder extends Seeder
         ];
 
         foreach ($categories as $category) {
-            SkillCategory::create([
-                'name' => $category,
-                'slug' => Str::slug($category),
-            ]);
+            SkillCategory::firstOrCreate(
+                ['name' => $category],
+                ['slug' => Str::slug($category)],
+            );
         }
     }
 }

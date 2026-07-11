@@ -1,11 +1,12 @@
 <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-       class="fixed inset-y-0 left-0 z-20 w-64 bg-white border-r border-slate-200
+       class="fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200
               flex flex-col transform transition-transform duration-200 ease-in-out
-              md:relative md:translate-x-0 md:flex-shrink-0 shadow-sm">
+              lg:relative lg:translate-x-0 lg:flex-shrink-0 shadow-sm">
 
     <div class="flex items-center justify-center h-16 border-b border-slate-200 px-4 bg-gradient-to-r from-indigo-600 to-indigo-500">
-        <a href="{{ route('admin.dashboard') }}" class="font-bold text-lg tracking-wide text-white">
-            <span>Admin</span><span class="font-light">Panel</span>
+        <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5">
+            <img src="{{ asset('images/admin-logo.png') }}" alt="Admin Logo" class="w-9 h-9 rounded-lg object-cover shadow-md ring-2 ring-white/20">
+            <span class="font-bold text-base tracking-wide text-white">Ray Purba</span>
         </a>
     </div>
 

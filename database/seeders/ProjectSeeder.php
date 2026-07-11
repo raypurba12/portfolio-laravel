@@ -61,7 +61,10 @@ class ProjectSeeder extends Seeder
 
         foreach ($projects as $project) {
             $project['slug'] = Str::slug($project['title']);
-            Project::create($project);
+            Project::firstOrCreate(
+                ['slug' => $project['slug']],
+                $project,
+            );
         }
     }
 }

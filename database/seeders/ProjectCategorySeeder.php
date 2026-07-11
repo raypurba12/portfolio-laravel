@@ -22,10 +22,10 @@ class ProjectCategorySeeder extends Seeder
         ];
 
         foreach ($categories as $category) {
-            ProjectCategory::create([
-                'name' => $category,
-                'slug' => Str::slug($category),
-            ]);
+            ProjectCategory::firstOrCreate(
+                ['name' => $category],
+                ['slug' => Str::slug($category)],
+            );
         }
     }
 }

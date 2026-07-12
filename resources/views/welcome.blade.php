@@ -742,8 +742,12 @@
         
         <div class="flex flex-wrap justify-center gap-6">
             @foreach($certificates as $cert)
-            <div class="cert-flip-outer h-[340px] w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]"
-                 data-aos="zoom-in" data-aos-delay="{{ ($loop->index%3)*100 }}">
+            <div
+    class="cert-flip-outer w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]"
+    style="height:340px; min-height:340px; background:red;"
+    data-aos="zoom-in"
+    data-aos-delay="{{ ($loop->index%3)*100 }}"
+>
                 <div class="cert-flip-inner">
 
                     {{-- FRONT --}}

@@ -145,34 +145,32 @@
     @if($slides->isNotEmpty())
     @php $hasVideo = $slides->contains(fn($s) => ($s->type ?? 'image') === 'video'); @endphp
     <div class="absolute inset-0 z-0 overflow-hidden bg-gray-950"
-     x-data="{
-         active: 0,
-         count: {{ $slides->count() }},
-         durations: {{ $durations }},
-         timer: null,
-         isMuted: true,
-         init(){
-             if(this.count > 1) this.next();
-             this.$watch('isMuted', val => {
-                 this.$el.querySelectorAll('video').forEach(v => v.muted = val);
-             });
-         },
-         next(){
-             clearInterval(this.timer);
-             this.timer = setInterval(() => {
-                 this.active = (this.active + 1) % this.count;
-                 this.next();
-             }, this.durations[this.active]);
-         },
-         goTo(i){
-             this.active = i;
-             this.next();
-         },
-         toggleMute(){
-             this.isMuted = !this.isMuted;
-         },
-         destroy(){ clearInterval(this.timer); }
-     }">
+      x-data="{
+          active: 0,
+          count: {{ $slides->count() }},
+          durations: {{ $durations }},
+          timer: null,
+          isMuted: true,
+          init(){
+              if(this.count > 1) this.next();
+          },
+          next(){
+              clearInterval(this.timer);
+              this.timer = setInterval(() => {
+                  this.active = (this.active + 1) % this.count;
+                  this.next();
+              }, this.durations[this.active]);
+          },
+          goTo(i){
+              this.active = i;
+              this.next();
+          },
+          toggleMute(){
+              this.isMuted = !this.isMuted;
+              this.$el.querySelectorAll('video').forEach(v => v.muted = this.isMuted);
+          },
+          destroy(){ clearInterval(this.timer); }
+      }">
     @foreach($slides as $i => $slide)
     <div class="absolute inset-0 transition-opacity duration-[1500ms] ease-in-out"
          :class="active === {{ $i }} ? 'opacity-100 z-[1]' : 'opacity-0 z-0'">
@@ -735,19 +733,15 @@
         <div class="text-center mb-16" data-aos="fade-up">
             <span class="font-orbitron text-xs text-cyan-400 tracking-widest uppercase mb-2 block">[ ACHIEVEMENTS ]</span>
             <h2 class="font-orbitron font-bold text-4xl md:text-5xl text-white mb-4 glitch-heading" data-text="Licenses & Certifications">
-                Licenses & <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">Certifications</span>
+                Licenses & <span class="text-white">Certifications</span>
             </h2>
             <div class="w-24 h-0.5 bg-gradient-to-r from-purple-500 to-cyan-500 mx-auto"></div>
         </div>
         
         <div class="flex flex-wrap justify-center gap-6">
             @foreach($certificates as $cert)
-            <div
-    class="cert-flip-outer w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]"
-    style="height:340px; min-height:340px; background:red;"
-    data-aos="zoom-in"
-    data-aos-delay="{{ ($loop->index%3)*100 }}"
->
+            <div class="cert-flip-outer h-[340px] w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]"
+                 data-aos="zoom-in" data-aos-delay="{{ ($loop->index%3)*100 }}">
                 <div class="cert-flip-inner">
 
                     {{-- FRONT --}}

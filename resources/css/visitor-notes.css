@@ -1,0 +1,472 @@
+/* ══════════════════════════════════════════════════════════════
+   VISITOR NOTES — interactive scene
+   Robot focal point di tengah + sticky notes dekoratif kiri/kanan
+   + form SEND SIGNAL di bawah. Identitas dark futuristic navy/black,
+   purple + cyan glow.
+
+   ── Prinsip layout (cross-browser / responsive) ──
+   • Layout utama memakai FLEX (bukan absolute top/left pixels):
+     robot selalu dead-center, notes mengepit kiri/kanan secara simetris.
+   • Transform HANYA untuk animasi masuk / efek gerak, tidak untuk posisi.
+     → hasil identik di Chrome / Edge / Firefox & semua viewport.
+   • Robot berukuran stabil (CSS variable), seluruh tubuh terlihat.
+   • Notes adalah elemen dekoratif di belakang bidang robot (z-index),
+     tidak pernah menutupi robot maupun form.
+   • Form terpisah di bawah robot dengan jarak jelas.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Scene layout ──────────────────────────────────────────── */
+.vn-scene {
+    --vn-canvas-w: 250px;
+    --vn-canvas-h: 290px;
+
+    /* Batasi lebar section agar tidak melebar mengikuti viewport */
+    position: relative;
+    width: 100%;
+    max-width: 1100px;
+    margin-inline: auto;
+    /* NOT a stacking context — robot/notes layers interact at section level */
+}
+
+/* ── Collage: robot tengah, notes kiri/kanan (flex, no pixel coords) ── */
+.vn-collage {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(1.5rem, 4vw, 3rem);
+    min-height: var(--vn-canvas-h);
+    opacity: 0;
+    transition: opacity 0.7s ease;
+}
+.vn-scene.is-revealed .vn-collage { opacity: 1; }
+
+.vn-robot-glow {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 280px;
+    height: 280px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(103,107,198,.5) 0%, rgba(61,143,176,.25) 42%, transparent 70%);
+    filter: blur(18px);
+    pointer-events: none;
+    z-index: 0;
+    animation: vn-glowPulse 3.4s ease-in-out infinite;
+}
+@keyframes vn-glowPulse {
+    0%,100% { opacity: .5; transform: translate(-50%,-50%) scale(1); }
+    50%     { opacity: .9; transform: translate(-50%,-50%) scale(1.1); }
+}
+
+/* ── Robot — selalu di tengah, ukuran stabil, seluruh tubuh terlihat ── */
+.vn-canvas {
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+    width: var(--vn-canvas-w);
+    height: var(--vn-canvas-h);
+}
+.vn-canvas canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    outline: none;
+}
+
+/* speech bubble */
+.vn-bubble {
+    position: absolute;
+    right: max(-170px, -16vw);
+    top: 10px;
+    width: min(230px, 24vw);
+    z-index: 30;
+    display: flex;
+    align-items: flex-start;
+    gap: 2px;
+    background: linear-gradient(160deg, rgba(28,32,62,.96), rgba(14,21,38,.96));
+    border: 1px solid rgba(103,107,198,.45);
+    border-radius: 16px;
+    padding: .7rem .95rem;
+    color: #e4e8ef;
+    font-size: .86rem;
+    line-height: 1.4;
+    text-align: left;
+    box-shadow: 0 10px 26px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.08);
+    opacity: 0;
+    transform: translateY(8px) scale(.9);
+    transition: opacity .4s ease, transform .4s ease;
+}
+.vn-bubble.is-on { opacity: 1; transform: translateY(0) scale(1); }
+.vn-bubble::before {
+    content: '';
+    position: absolute;
+    left: -7px;
+    top: 24px;
+    border: 7px solid transparent;
+    border-right-color: rgba(103,107,198,.45);
+}
+.vn-bubble::after {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: 25px;
+    border: 5px solid transparent;
+    border-right-color: rgba(18,24,44,.96);
+}
+.vn-bubble-caret {
+    display: inline-block;
+    width: 7px;
+    height: 14px;
+    margin-top: 2px;
+    background: #a5a8e8;
+    box-shadow: 0 0 8px rgba(103,107,198,.8);
+    animation: vn-caret 0.8s step-end infinite;
+    flex-shrink: 0;
+}
+@keyframes vn-caret { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+
+/* ── Sticky notes columns — dekoratif, di belakang bidang robot ── */
+.vn-notes {
+    z-index: 1; /* BELAKANG robot canvas (z-index 2) → tak pernah menutupi robot */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(0.9rem, 2vw, 1.25rem);
+    width: clamp(180px, 22vw, 240px);
+    pointer-events: none;
+}
+/* Batasi jumlah note per kolom agar proporsional */
+.vn-notes .vn-note:nth-child(n+3) { display: none; }
+
+.vn-note {
+    position: relative;
+    width: 100%;
+    opacity: 0;               /* dipakai JS untuk animasi masuk / depth */
+    will-change: transform, opacity;
+    pointer-events: none;
+}
+
+.vn-note-inner {
+    position: relative;
+    border-radius: 10px;
+    padding: 1.05rem 1.15rem 1rem;
+    border: 1px solid rgba(255,255,255,.08);
+    box-shadow: 0 14px 34px -12px rgba(0,0,0,.65), 0 0 22px -6px var(--accent-glow, rgba(103,107,198,.45));
+    overflow: hidden;
+    transform: rotate(var(--rot, 0deg));
+    animation: vn-noteFloat 6s ease-in-out infinite;
+    animation-delay: var(--d, 0s);
+}
+@keyframes vn-noteFloat {
+    0%,100% { transform: rotate(var(--rot, 0deg)) translateY(0); }
+    50%     { transform: rotate(var(--rot, 0deg)) translateY(-7px); }
+}
+
+.vn-paper-0 { background: linear-gradient(165deg, #1d2147, #151936); border-color: rgba(103,107,198,.45); --accent-glow: rgba(103,107,198,.5); }
+.vn-paper-1 { background: linear-gradient(165deg, #0f2b3b, #0c2130); border-color: rgba(61,143,176,.5); --accent-glow: rgba(61,143,176,.5); }
+.vn-paper-2 { background: linear-gradient(165deg, #331438, #26102b); border-color: rgba(224,135,192,.4); --accent-glow: rgba(224,135,192,.45); }
+.vn-paper-3 { background: linear-gradient(165deg, #0e352e, #0a2a25); border-color: rgba(126,213,194,.4); --accent-glow: rgba(126,213,194,.45); }
+
+.vn-tape {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%) rotate(-3deg);
+    width: 88px;
+    height: 22px;
+    background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.05));
+    border: 1px solid rgba(255,255,255,.10);
+    border-radius: 3px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.25);
+    backdrop-filter: blur(2px);
+    pointer-events: none;
+}
+.vn-note-name {
+    font-family: 'Orbitron', monospace;
+    font-size: .7rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: #a5a8e8;
+    font-weight: 700;
+    margin-bottom: .5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.vn-note-msg {
+    color: #cfd6e4;
+    font-size: .88rem;
+    line-height: 1.5;
+    word-break: break-word;
+}
+.vn-note-date {
+    margin-top: .65rem;
+    font-size: .68rem;
+    color: rgba(160,170,190,.55);
+    font-family: 'Orbitron', monospace;
+    letter-spacing: .06em;
+}
+
+.vn-note--empty .vn-note-msg { text-align: center; }
+
+/* ── Glass form — terpisah di bawah area robot ── */
+.vn-form {
+    width: 100%;
+    max-width: 440px;
+    margin: clamp(2.5rem, 6vw, 4rem) auto 0; /* jarak jelas dari robot */
+    position: relative;
+    z-index: 20;
+    opacity: 0;
+    transform: translateY(24px) scale(.97);
+    transition: opacity .7s ease, transform .7s ease;
+}
+/* Form berada di luar .vn-scene → reveal mengikuti section
+   (initVisitorNotes memasang is-revealed di section DAN .vn-scene). */
+#visitor-notes.is-revealed .vn-form { opacity: 1; transform: none; transition-delay: .15s; }
+
+.vn-form-inner {
+    position: relative;
+    border-radius: 20px;
+    padding: 1.6rem 1.6rem 1.8rem;
+    background: linear-gradient(160deg, rgba(24,30,54,.82), rgba(12,18,34,.88));
+    border: 1px solid rgba(103,107,198,.35);
+    box-shadow: 0 22px 60px -22px rgba(0,0,0,.75), 0 0 34px -8px rgba(103,107,198,.4), inset 0 1px 0 rgba(255,255,255,.06);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    transition: border-color .3s ease;
+}
+.vn-form-inner:hover { border-color: rgba(103,107,198,.55); }
+.vn-form-inner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    background: linear-gradient(115deg, rgba(103,107,198,.08), transparent 35%, transparent 70%, rgba(61,143,176,.1));
+    pointer-events: none;
+}
+.vn-form-corner {
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    pointer-events: none;
+}
+.vn-form-corner--tl { top: -1px; left: -1px; border-top: 2px solid #676bc6; border-left: 2px solid #676bc6; border-radius: 8px 0 0 0; filter: drop-shadow(0 0 6px rgba(103,107,198,.6)); }
+.vn-form-corner--br { bottom: -1px; right: -1px; border-bottom: 2px solid #3d8fb0; border-right: 2px solid #3d8fb0; border-radius: 0 0 8px 0; filter: drop-shadow(0 0 6px rgba(61,143,176,.6)); }
+
+.vn-form-eyebrow {
+    display: block;
+    text-align: center;
+    font-family: 'Orbitron', monospace;
+    font-size: .66rem;
+    letter-spacing: .4em;
+    color: #a5a8e8;
+    margin-bottom: 1.15rem;
+}
+
+.vn-field-label {
+    display: block;
+    font-family: 'Orbitron', monospace;
+    font-size: .68rem;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: #828da2;
+    margin-bottom: .45rem;
+}
+.vn-field {
+    width: 100%;
+    background: rgba(6,10,20,.6);
+    border: 1px solid rgba(103,107,198,.25);
+    border-radius: 12px;
+    padding: .8rem 1rem;
+    font-size: .9rem;
+    color: #e4e8ef;
+    transition: border-color .25s ease, box-shadow .25s ease;
+    outline: none;
+}
+.vn-field::placeholder { color: rgba(130,141,162,.6); }
+.vn-field:focus {
+    border-color: #676bc6;
+    box-shadow: 0 0 0 3px rgba(103,107,198,.18), 0 0 18px -4px rgba(103,107,198,.5);
+}
+textarea.vn-field { resize: none; }
+
+.vn-form-btn {
+    width: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .6rem;
+    overflow: hidden;
+    background: linear-gradient(90deg, #676bc6, #3d8fb0);
+    color: white;
+    font-family: 'Orbitron', monospace;
+    font-size: .82rem;
+    letter-spacing: .16em;
+    font-weight: 700;
+    padding: .95rem 1.25rem;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    box-shadow: 0 10px 26px -8px rgba(103,107,198,.6);
+    transition: transform .3s ease, box-shadow .3s ease, filter .3s ease;
+}
+.vn-form-btn:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.12);
+    box-shadow: 0 14px 32px -8px rgba(103,107,198,.75), 0 0 22px -6px rgba(103,107,198,.6);
+}
+.vn-form-btn:active { transform: translateY(0); }
+
+/* ── Mobile ───────────────────────────────────────────────── */
+@media (max-width: 899px) {
+    .vn-scene {
+        --vn-canvas-w: min(190px, 50vw);
+        --vn-canvas-h: calc(var(--vn-canvas-w) * 1.16);
+    }
+
+    /* Gestur pin: ancestor overflow:hidden membuat scroll-container sehingga
+       position:sticky gagal → ganti dengan overflow:clip (TIDAK membuat
+       scroll container) agar pinning robot berfungsi. */
+    #visitor-notes { overflow: clip; }
+
+    /* ── Pin/perangkap scroll mobile (pola Projects) ──
+       .vn-scene jadi sticky 100vh; JS memberi stage runway (count+1)x100vh.
+       Saat user scroll: ROBOT BERHENTI DI TEMPAT, notes muncul satu per satu
+       di zona bawah robot; setelah semua note habis pin lepas → user baru
+       bisa lanjut scroll ke section berikutnya. */
+    .vn-pin.vn-pinned {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        height: 100dvh;
+        overflow: hidden;
+        isolation: isolate;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding-top: 5rem;     /* headroom bubble di atas robot (bubble top:-70px) */
+        padding-bottom: 1.25rem;
+    }
+
+    /* ── Mobile: robot di ATAS, ZONA khusus sticky notes di BAWAH robot ──
+       (di antara robot & form). Semua note numpuk di SATU slot → tengah
+       zona; JS memunculkan satu note per waktu (fade in/out di tempat,
+       persis konsep kartu Projects). Note absolut = keluar dari alur flex;
+       tinggi zona dicadangkan lewat padding-bottom pada collage sehingga
+       robot tetap di atas zona dan form di bawah zona. */
+    .vn-scene { --vn-notes-h: clamp(132px, 34vw, 178px); }
+    .vn-collage {
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0;
+        min-height: var(--vn-canvas-h);
+        padding-bottom: var(--vn-notes-h);
+    }
+    .vn-canvas { order: 1; }
+    .vn-notes--l { order: 2; }
+    .vn-notes--r { order: 3; }
+
+    .vn-robot-glow {
+        width: 200px;
+        height: 200px;
+        top: calc(var(--vn-canvas-h) / 2); /* tetap terpusat pada robot */
+    }
+
+    .vn-notes {
+        position: absolute;
+        top: var(--vn-canvas-h);   /* mulai tepat di bawah robot */
+        left: 50%;
+        /* Lebar note lebih besar dari lebar kolom robot (~190px) agar tampil
+           lega di mobile — responsif via clamp vw, tetap centered. */
+        width: clamp(240px, 74vw, 336px);
+        height: var(--vn-notes-h); /* zona = di antara robot & form */
+        gap: 0;
+        margin: 0;
+        transform: translateX(-50%);
+    }
+    .vn-notes--l { margin: 0; }
+    .vn-notes--r { margin: 0; }
+    /* Semua note numpuk di tengah zona (satu slot); translate:-50% -50%
+       hanya penjepit pusat — opacity/scale dikendalikan JS. */
+    .vn-notes .vn-note {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        translate: -50% -50%;
+    }
+    /* Statis (tanpa JS / reduced-motion): satu note per kolom di zona. */
+    .vn-notes .vn-note:nth-child(n+2) { display: none; }
+    .vn-note { width: 100%; }
+    /* Teks sedikit lebih besar agar lega mengikuti note yang lebih besar */
+    .vn-note-name { font-size: .78rem; margin-bottom: .55rem; }
+    .vn-note-msg { font-size: .97rem; line-height: 1.5; }
+    .vn-note-date { font-size: .75rem; }
+    .vn-note .vn-note-msg {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .vn-bubble {
+        right: auto;
+        left: 50%;
+        top: -70px;
+        width: min(76vw, 300px);
+        transform: translateX(-50%) translateY(8px) scale(.9);
+    }
+    .vn-bubble.is-on { transform: translateX(-50%) translateY(0) scale(1); }
+    .vn-bubble::before {
+        left: 50%;
+        top: auto;
+        bottom: -13px;
+        transform: translateX(-50%) rotate(225deg);
+        border-right-color: transparent;
+        border-top-color: rgba(103,107,198,.45);
+    }
+    .vn-bubble::after {
+        left: 50%;
+        top: auto;
+        bottom: -10px;
+        transform: translateX(-50%) rotate(225deg);
+        border-right-color: transparent;
+        border-top-color: rgba(18,24,44,.96);
+    }
+
+    /* Form kini DI LUAR pin (setelah runway scene) → tidak mungkin
+       terpotong overflow:hidden pin; jarak lega dari zona notes. */
+    .vn-form {
+        margin-top: 1.5rem;
+        margin-bottom: 3rem;
+    }
+    .vn-form-inner { padding: 1.4rem 1.35rem 1.55rem; }
+}
+
+/* Navbar bawah mobile (fixed, z-60) tidak boleh menutupi robot/notes
+   saat pin aktif → cadangkan tingginya sebagai padding-bottom pin.
+   (--mobile-navbar-h didefinisikan layout pada ≤767px.) */
+@media (max-width: 767px) {
+    .vn-pin.vn-pinned {
+        padding-bottom: calc(var(--mobile-navbar-h, 5.5rem) + 1.25rem);
+    }
+}
+
+/* ── Reduced motion ────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    .vn-robot-glow,
+    .vn-note-inner,
+    .vn-bubble-caret {
+        animation: none !important;
+    }
+    .vn-collage { opacity: 1; transition: none; }
+    .vn-form { opacity: 1; transform: none; transition: none; }
+    .vn-bubble { transition: none; }
+    /* Catatan: TRANSFORM/OPACITY note TIDAK ikut dinonaktifkan — gerakan
+       note adalah scroll-driven (dikendalikan user) sehingga tetap berjalan
+       seperti animasi Projects. */
+}

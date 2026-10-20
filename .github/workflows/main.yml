@@ -1,1 +1,215 @@
+# ===============================================================================
+# Auto-deploy Laravel -> hosting DomaiNesia (SSH + rsync)
+#
+# Trigger : push ke branch "main" (otomatis) atau manual dari tab Actions
+# Panduan : DEPLOY_DOMENESIA.md (daftar GitHub Secrets + langkah setup)
+#
+# Prinsip aman:
+#  - Tidak pernah menjalankan migrate:fresh / drop / rollback / seed
+#  - Tidak pernah menimpa .env produksi di server (di-exclude dari upload)
+#  - Tidak menyentuh /home/raycodem/public_html (masih dipakai WordPress)
+#  - Build frontend (npm) dilakukan di runner GitHub, bukan di hosting
+# ===============================================================================
+name: Deploy ke DomaiNesia
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      run_migrations:
+        description: "Jalankan php artisan migrate --force (aman, tanpa fresh/drop)"
+        type: boolean
+        default: true
+
+# Cegah dua deployment berjalan bersamaan.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    name: Build & deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    env:
+      # Konstanta server DomaiNesia (bukan kredensial, aman di-hardcode).
+      REMOTE_APP_DIR: /home/raycodem/portfolio-laravel
+      REMOTE_PHP_BIN: /opt/cpanel/ea-php83/root/usr/bin/php
+      PRODUCTION_URL: https://raypurba.my.id
+      # Push ke main        -> selalu jalankan langkah migrasi aman.
+      # Manual (dispatch)   -> mengikuti pilihan input run_migrations.
+      RUN_MIGRATIONS: "${{ github.event_name != 'workflow_dispatch' || inputs.run_migrations }}"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validasi secrets wajib
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          missing=""
+          for name in SSH_HOST SSH_PORT SSH_USER SSH_PRIVATE_KEY; do
+            if [ -z "${!name:-}" ]; then missing="$missing $name"; fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Secret belum diisi:$missing - lihat DEPLOY_DOMENESIA.md"
+            exit 1
+          fi
+          echo "[OK] SSH_HOST / SSH_PORT / SSH_USER / SSH_PRIVATE_KEY tersedia."
+
+      - name: Setup PHP 8.3 + Composer
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          coverage: none
+          tools: composer:v2
+          extensions: mbstring, xml, ctype, iconv, curl, openssl, pdo_mysql, fileinfo, tokenizer, bcmath
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/composer
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            composer-
+
+      - name: Composer install (production)
+        run: composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Build frontend (Vite) di runner
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+
+      - name: Muat SSH key ke agent
+        uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Percayai host key server
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          ssh-keyscan -T 15 -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null \
+            && echo "[OK] Host key server tersimpan di known_hosts." \
+            || echo "[WARN] ssh-keyscan gagal; koneksi memakai StrictHostKeyChecking=accept-new."
+
+      - name: Preflight check server (read-only)
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          set -euo pipefail
+          ssh -p "$SSH_PORT" -o ConnectTimeout=15 -o StrictHostKeyChecking=accept-new "$SSH_USER@$SSH_HOST" \
+            "APP_DIR='$REMOTE_APP_DIR' PHP_BIN='$REMOTE_PHP_BIN' bash -s" \
+            < deploy/preflight.sh
+
+      - name: Upload kode ke server (rsync, fallback tar)
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          set -euo pipefail
+          SSH_OPTS="-p $SSH_PORT -o ConnectTimeout=15 -o StrictHostKeyChecking=accept-new"
+          if ssh $SSH_OPTS "$SSH_USER@$SSH_HOST" 'command -v rsync >/dev/null 2>&1'; then
+            echo "[INFO] rsync tersedia di server -> upload incremental + sinkronisasi --delete."
+            rsync -az --delete --human-readable --stats \
+              --exclude-from=.github/deploy-exclude.txt \
+              -e "ssh $SSH_OPTS" \
+              ./ "$SSH_USER@$SSH_HOST:$REMOTE_APP_DIR/"
+          else
+            echo "[WARN] rsync tidak ada di server -> fallback tar (tanpa --delete)."
+            tar czf - \
+              --exclude='.git' --exclude='.github' --exclude='node_modules' \
+              --exclude='storage' --exclude='bootstrap/cache' \
+              --exclude='public/storage' --exclude='public/.well-known' \
+              --exclude='.env' --exclude='.env.*' --exclude='.deploy' \
+              --exclude='.design' --exclude='tests' --exclude='*.zip' \
+              . | ssh $SSH_OPTS "$SSH_USER@$SSH_HOST" \
+              "mkdir -p '$REMOTE_APP_DIR' && tar xzf - -C '$REMOTE_APP_DIR'"
+          fi
+
+      - name: Post-deploy aman di server (Laravel)
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          DEPLOY_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          ssh -p "$SSH_PORT" -o ConnectTimeout=15 -o StrictHostKeyChecking=accept-new "$SSH_USER@$SSH_HOST" \
+            "APP_DIR='$REMOTE_APP_DIR' PHP_BIN='$REMOTE_PHP_BIN' RUN_MIGRATIONS='$RUN_MIGRATIONS' DEPLOY_SHA='$DEPLOY_SHA' bash -s" \
+            < deploy/remote-deploy.sh
+
+      - name: Verifikasi deploy
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          set -euo pipefail
+          ssh_opts="-p $SSH_PORT -o ConnectTimeout=15 -o StrictHostKeyChecking=accept-new"
+          remote_sha="$(ssh $ssh_opts "$SSH_USER@$SSH_HOST" "cat '$REMOTE_APP_DIR/.deploy/current_sha' 2>/dev/null || true")"
+          echo "Commit di repo   : $GITHUB_SHA"
+          echo "Commit di server : ${remote_sha:-<kosong>}"
+          if [ "$remote_sha" != "$GITHUB_SHA" ]; then
+            echo "::error::Verifikasi gagal - marker commit di server tidak cocok."
+            exit 1
+          fi
+          ssh $ssh_opts "$SSH_USER@$SSH_HOST" \
+            "test -f '$REMOTE_APP_DIR/public/build/manifest.json' \
+              && echo '[OK] manifest Vite ada' \
+              || { echo '[FAIL] manifest Vite hilang'; exit 1; }"
+          ssh $ssh_opts "$SSH_USER@$SSH_HOST" \
+            "test -L '$REMOTE_APP_DIR/public/storage' \
+              && echo '[OK] public/storage symlink ada' \
+              || echo '[WARN] public/storage belum ada (jalankan storage:link setelah .env terisi)'"
+          echo "[OK] Verifikasi inti lolos."
+
+      - name: Health check HTTP (informational)
+        run: |
+          set -uo pipefail
+          code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 "$PRODUCTION_URL" || echo 000)"
+          echo "GET $PRODUCTION_URL -> HTTP $code"
+          case "$code" in
+            000) echo "::warning::Tidak bisa menjangkau $PRODUCTION_URL dari runner." ;;
+            5*)  echo "::warning::HTTP $code. Jika document root masih WordPress ini normal; jika sudah ke Laravel, cek storage/logs/laravel.log." ;;
+            *)   echo "[OK] Domain merespons HTTP $code." ;;
+          esac
+
+      - name: Ringkasan deploy
+        if: always()
+        run: |
+          {
+            echo "## Deploy DomaiNesia"
+            echo ""
+            echo "| Item | Nilai |"
+            echo "|---|---|"
+            echo "| Commit | \`${GITHUB_SHA}\` |"
+            echo "| Folder server | \`${REMOTE_APP_DIR}\` |"
+            echo "| Migrasi aman dijalankan | ${RUN_MIGRATIONS} |"
+            echo "| public_html WordPress | tidak disentuh |"
+            echo "| Domain | ${PRODUCTION_URL} (document root belum dipindah) |"
+          } >> "$GITHUB_STEP_SUMMARY"
 

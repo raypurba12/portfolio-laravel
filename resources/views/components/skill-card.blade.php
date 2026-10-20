@@ -4,7 +4,7 @@
         <img src="{{ str_starts_with($skill->logo_path, 'http') ? $skill->logo_path : asset('storage/' . str_replace('public/', '', $skill->logo_path)) }}" alt="{{ $skill->name }}"
              class="skill-icon w-12 h-12 object-contain drop-shadow-lg" loading="lazy" width="48" height="48">
         @else
-        <div class="skill-icon w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-cyan-500/20 border border-purple-500/30 flex items-center justify-center font-orbitron font-bold text-purple-400 text-lg">
+        <div class="skill-icon w-12 h-12 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center font-orbitron font-bold text-purple-400 text-lg">
             {{ substr($skill->name,0,2) }}
         </div>
         @endif
@@ -12,7 +12,7 @@
     <p class="text-sm font-semibold text-gray-200 group-hover:text-white transition-colors">{{ $skill->name }}</p>
     @if($skill->percentage)
     <div class="w-full mt-2 bg-gray-800 rounded-full h-1">
-        <div class="h-1 rounded-full bg-gradient-to-r from-purple-500 to-cyan-500"
+        <div class="h-1 rounded-full bg-purple-500"
              style="width:{{ $skill->percentage }}%"></div>
     </div>
     <p class="text-xs text-purple-400 mt-1 font-orbitron">{{ $skill->percentage }}%</p>

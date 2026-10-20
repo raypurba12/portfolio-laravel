@@ -23,12 +23,13 @@ class CertificateController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name'      => 'required|string|max:255',
-            'number'    => 'nullable|string|max:255',
-            'issuer'    => 'required|string|max:255',
-            'issued_at' => 'required|date',
-            'image'     => 'nullable|image|max:4096',
-            'pdf'       => 'nullable|mimes:pdf|max:10240',
+            'name'           => 'required|string|max:255',
+            'number'         => 'nullable|string|max:255',
+            'issuer'         => 'required|string|max:255',
+            'issued_at'      => 'required|date',
+            'credential_url' => 'nullable|url|max:2048',
+            'image'          => 'nullable|image|max:4096',
+            'pdf'            => 'nullable|mimes:pdf|max:10240',
         ]);
 
         unset($data['image'], $data['pdf']);
@@ -52,12 +53,13 @@ class CertificateController extends Controller
     public function update(Request $request, Certificate $certificate)
     {
         $data = $request->validate([
-            'name'      => 'required|string|max:255',
-            'number'    => 'nullable|string|max:255',
-            'issuer'    => 'required|string|max:255',
-            'issued_at' => 'required|date',
-            'image'     => 'nullable|image|max:4096',
-            'pdf'       => 'nullable|mimes:pdf|max:10240',
+            'name'           => 'required|string|max:255',
+            'number'         => 'nullable|string|max:255',
+            'issuer'         => 'required|string|max:255',
+            'issued_at'      => 'required|date',
+            'credential_url' => 'nullable|url|max:2048',
+            'image'          => 'nullable|image|max:4096',
+            'pdf'            => 'nullable|mimes:pdf|max:10240',
         ]);
 
         unset($data['image'], $data['pdf']);

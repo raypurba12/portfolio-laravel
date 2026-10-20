@@ -22,6 +22,11 @@
                 </div>
             </div>
             <div>
+                <x-input-label for="credential_url" value="Credential URL"/>
+                <x-text-input id="credential_url" name="credential_url" type="url" class="mt-1 block w-full" :value="old('credential_url', $certificate->credential_url)" placeholder="https://"/>
+                <x-input-error :messages="$errors->get('credential_url')" class="mt-1"/>
+            </div>
+            <div>
                 <x-input-label value="Certificate Image"/>
                 @if($certificate->image_path)
                 <img src="{{ asset('storage/' . str_replace('public/', '', $certificate->image_path)) }}" class="w-32 h-24 object-cover rounded mb-2" loading="lazy">

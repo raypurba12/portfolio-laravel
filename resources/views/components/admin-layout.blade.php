@@ -139,6 +139,14 @@
                 @endif
             </a>
 
+            <a href="{{ route('admin.visitor-notes.index') }}" class="{{ request()->routeIs('admin.visitor-notes.*') ? 'active' : '' }}">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 3h4a1 1 0 011 1v4M3 5a2 2 0 012-2h4m8 18h4a1 1 0 001-1v-4M6 19a2 2 0 01-2-2v-4m4-6h.01m3.99 0h.01M12 17h.01M8 17h.01M13 7h.01M17 7h.01M7 12h.01M17 12h.01"/></svg>
+                Visitor Notes
+                @if(($pendingVisitorNoteCount ?? 0) > 0)
+                <span class="ml-auto bg-amber-500 text-white text-[11px] font-bold rounded-full w-5 h-5 flex items-center justify-center">{{ $pendingVisitorNoteCount }}</span>
+                @endif
+            </a>
+
             <div class="sidebar-label">Settings</div>
 
             <a href="{{ route('admin.social-media.index') }}" class="{{ request()->routeIs('admin.social-media.*') ? 'active' : '' }}">
@@ -192,24 +200,203 @@
 
                 <div class="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1"></div>
 
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <button class="flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-150">
-                            <div class="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                <div class="relative"
+                     x-data="{
+                        menuOpen: false,
+                        confirmOpen: false,
+                        loggingOut: false,
+                        logoutError: false,
+
+                        toggleMenu() {
+                            this.menuOpen = !this.menuOpen;
+                            if (this.menuOpen) {
+                                this.$nextTick(() => {
+                                    this.$refs.menu?.querySelector('[data-menuitem]')?.focus();
+                                });
+                            }
+                        },
+
+                        askLogout() {
+                            this.menuOpen = false;
+                            this.confirmOpen = true;
+                            this.logoutError = false;
+                            this.$nextTick(() => this.$refs.cancelBtn?.focus());
+                        },
+
+                        closeConfirm() {
+                            if (this.loggingOut) return;
+                            this.confirmOpen = false;
+                            this.logoutError = false;
+                            this.$refs.logoutTrigger?.focus();
+                        },
+
+                        handleEscape() {
+                            if (this.loggingOut) return;
+                            if (this.confirmOpen) {
+                                this.closeConfirm();
+                            } else if (this.menuOpen) {
+                                this.menuOpen = false;
+                                this.$refs.trigger?.focus();
+                            }
+                        },
+
+                        moveMenuFocus(step) {
+                            const items = Array.from(this.$refs.menu?.querySelectorAll('[data-menuitem]') ?? []);
+                            if (!items.length) return;
+                            const current = items.indexOf(document.activeElement);
+                            const next = (current + step + items.length) % items.length;
+                            items[next].focus();
+                        },
+
+                        async performLogout() {
+                            if (this.loggingOut) return;
+                            this.loggingOut = true;
+                            this.logoutError = false;
+                            try {
+                                const response = await fetch('{{ route('logout') }}', {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
+                                        'Accept': 'application/json',
+                                        'X-Requested-With': 'XMLHttpRequest',
+                                    },
+                                });
+                                if (!response.ok) throw new Error('Logout failed');
+                                window.location.replace('{{ route('login') }}');
+                            } catch (error) {
+                                this.loggingOut = false;
+                                this.logoutError = true;
+                            }
+                        },
+                     }"
+                     @click.outside="menuOpen = false"
+                     @keydown.escape.window="handleEscape()">
+
+                    <button type="button"
+                            x-ref="trigger"
+                            @click="toggleMenu()"
+                            @keydown.arrow-down.prevent="if (!menuOpen) toggleMenu()"
+                            :aria-expanded="menuOpen"
+                            aria-haspopup="menu"
+                            aria-controls="admin-user-menu"
+                            class="flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors duration-150">
+                        <div class="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                            {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                        </div>
+                        <span class="hidden sm:block">{{ Auth::user()->name }}</span>
+                        <svg :class="menuOpen ? 'rotate-180' : ''"
+                             class="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+
+                    {{-- User dropdown menu --}}
+                    <div x-show="menuOpen"
+                         x-ref="menu"
+                         x-cloak
+                         id="admin-user-menu"
+                         role="menu"
+                         aria-orientation="vertical"
+                         aria-labelledby="admin-user-trigger"
+                         @keydown.arrow-down.prevent="moveMenuFocus(1)"
+                         @keydown.arrow-up.prevent="moveMenuFocus(-1)"
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
+                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-100"
+                         x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
+                         class="absolute right-0 mt-2 w-56 max-w-[calc(100vw-2rem)] origin-top-right rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xl shadow-slate-900/10 dark:shadow-black/40 overflow-hidden">
+
+                        <div class="px-4 pt-3 pb-2.5 border-b border-slate-100 dark:border-slate-700/70">
+                            <p class="text-sm font-semibold text-slate-800 dark:text-white truncate">{{ Auth::user()->name }}</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{{ Auth::user()->email }}</p>
+                        </div>
+
+                        <div class="p-1.5">
+                            <a href="{{ route('profile.edit') }}"
+                               data-menuitem
+                               role="menuitem"
+                               @click="menuOpen = false"
+                               class="flex items-center gap-2.5 min-h-[44px] px-3 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60 hover:text-slate-900 dark:hover:text-white focus:outline-none focus-visible:bg-slate-100 dark:focus-visible:bg-slate-700/60 transition-colors duration-150">
+                                <svg class="w-4 h-4 text-slate-400 dark:text-slate-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                Profile
+                            </a>
+                            <button type="button"
+                                    data-menuitem
+                                    role="menuitem"
+                                    x-ref="logoutTrigger"
+                                    @click="askLogout()"
+                                    class="w-full flex items-center gap-2.5 min-h-[44px] px-3 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400 focus:outline-none focus-visible:bg-rose-50 dark:focus-visible:bg-rose-500/10 transition-colors duration-150">
+                                <svg class="w-4 h-4 text-slate-400 dark:text-slate-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                                Log Out
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Logout confirmation modal --}}
+                    <div x-show="confirmOpen"
+                         x-cloak
+                         role="dialog"
+                         aria-modal="true"
+                         aria-labelledby="logout-modal-title"
+                         @click.self="closeConfirm()"
+                         x-transition:enter="ease-out duration-200"
+                         x-transition:enter-start="opacity-0"
+                         x-transition:enter-end="opacity-100"
+                         x-transition:leave="ease-in duration-150"
+                         x-transition:leave-start="opacity-100"
+                         x-transition:leave-end="opacity-0"
+                         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                        <div x-show="confirmOpen"
+                             x-transition:enter="ease-out duration-200"
+                             x-transition:enter-start="opacity-0 scale-95"
+                             x-transition:enter-end="opacity-100 scale-100"
+                             x-transition:leave="ease-in duration-150"
+                             x-transition:leave-start="opacity-100 scale-100"
+                             x-transition:leave-end="opacity-0 scale-95"
+                             class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl p-6 w-full max-w-sm sm:max-w-md">
+                            <div class="flex items-start gap-4 mb-5">
+                                <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-500/10 flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                                </div>
+                                <div>
+                                    <h3 id="logout-modal-title" class="text-sm font-semibold text-slate-800 dark:text-white">Log Out</h3>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Are you sure you want to log out of your admin account?</p>
+                                </div>
                             </div>
-                            <span class="hidden sm:block">{{ Auth::user()->name }}</span>
-                            <svg class="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                        </button>
-                    </x-slot>
-                    <x-slot name="content">
-                        <x-dropdown-link :href="route('profile.edit')">Profile</x-dropdown-link>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <x-dropdown-link :href="route('logout')" onclick="event.preventDefault();this.closest('form').submit();">Log Out</x-dropdown-link>
-                        </form>
-                    </x-slot>
-                </x-dropdown>
+
+                            <div x-show="logoutError"
+                                 x-cloak
+                                 role="alert"
+                                 x-transition:enter="ease-out duration-150"
+                                 x-transition:enter-start="opacity-0 -translate-y-1"
+                                 x-transition:enter-end="opacity-100 translate-y-0"
+                                 class="mb-4 flex items-start gap-2.5 rounded-lg border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/50 px-3.5 py-2.5 text-red-700 dark:text-red-300">
+                                <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                <div class="text-sm">
+                                    <p class="font-semibold">Logout failed</p>
+                                    <p class="text-xs mt-0.5 opacity-90">Something went wrong. Please try again.</p>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center sm:justify-end gap-2.5 sm:gap-3">
+                                <button type="button"
+                                        x-ref="cancelBtn"
+                                        @click="closeConfirm()"
+                                        :disabled="loggingOut"
+                                        class="px-4 py-2.5 sm:py-2 text-sm font-medium rounded-lg transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">
+                                    Cancel
+                                </button>
+                                <button type="button"
+                                        @click="performLogout()"
+                                        :disabled="loggingOut"
+                                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 text-sm font-semibold rounded-lg transition-colors duration-150 disabled:opacity-60 disabled:cursor-not-allowed text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">
+                                    <svg x-show="loggingOut" x-cloak class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>
+                                    <span x-text="loggingOut ? 'Logging out...' : (logoutError ? 'Try Again' : 'Log Out')"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </header>
 

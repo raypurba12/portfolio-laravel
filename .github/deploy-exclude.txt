@@ -1,0 +1,31 @@
+# Daftar file yang TIDAK dikirim ke server DomaiNesia (dipakai rsync --exclude-from).
+# Pola diawali "/" = hanya di root repo. Sisanya cocok di semua level.
+
+# Rahasia & konfigurasi milik server (jangan pernah ditimpa/dihapus)
+.env
+.env.*
+.deploy/
+
+# Data runtime yang harus bertahan di server (upload admin, log, sesi, cache)
+storage/
+bootstrap/cache/
+public/storage
+public/.well-known/
+
+# Artefak repo/tooling yang tidak dipakai di server
+.git/
+.github/
+node_modules/
+tests/
+phpunit.xml
+.editorconfig
+public/hot
+.design/
+
+# Arsip besar di root repo (jangan di-upload)
+/*.zip
+
+# Sampah OS/editor
+*.log
+.DS_Store
+Thumbs.db

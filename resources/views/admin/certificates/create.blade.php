@@ -25,6 +25,11 @@
                 </div>
             </div>
             <div>
+                <x-input-label for="credential_url" value="Credential URL"/>
+                <x-text-input id="credential_url" name="credential_url" type="url" class="mt-1 block w-full" :value="old('credential_url')" placeholder="https://"/>
+                <x-input-error :messages="$errors->get('credential_url')" class="mt-1"/>
+            </div>
+            <div>
                 <x-input-label for="image" value="Certificate Image"/>
                 <x-file-input id="image" name="image" class="mt-1 block w-full"/>
                 <x-input-error :messages="$errors->get('image')" class="mt-1"/>

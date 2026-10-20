@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\SkillController;
 use App\Http\Controllers\Admin\SocialMediaController;
+use App\Http\Controllers\Admin\VisitorNoteController;
 use App\Http\Controllers\Api\ChatbotController;
 use App\Http\Controllers\FrontendController;
 use App\Http\Controllers\ProfileController;
@@ -31,7 +32,15 @@ Route::get('/robots.txt', function () {
 Route::get('/projects', [FrontendController::class, 'projects'])->name('projects.index');
 Route::get('/projects/{project:slug}', [FrontendController::class, 'projectDetail'])->name('projects.show');
 Route::post('/contact', [FrontendController::class, 'contactStore'])->name('contact.store');
+Route::post('/visitor-notes', [FrontendController::class, 'visitorNoteStore'])->name('visitor-notes.store');
 Route::post('/chatbot/send', [ChatbotController::class, 'send'])->name('chatbot.send')->middleware('throttle:30,1');
+
+Route::get('/clear', function() {
+    \Illuminate\Support\Facades\Artisan::call('view:clear');
+    \Illuminate\Support\Facades\Artisan::call('cache:clear');
+    \Illuminate\Support\Facades\Artisan::call('config:clear');
+    return "Semua cache (view, cache, config) berhasil dibersihkan!";
+});
 
 Route::get('/dashboard', function () {
     return redirect()->route('admin.dashboard');
@@ -54,6 +63,11 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
     Route::resource('skills', SkillController::class)->except('show');
     Route::resource('social-media', SocialMediaController::class)->except('show');
+
+    Route::get('visitor-notes', [VisitorNoteController::class, 'index'])->name('visitor-notes.index');
+    Route::post('visitor-notes/{visitorNote}/approve', [VisitorNoteController::class, 'approve'])->name('visitor-notes.approve');
+    Route::post('visitor-notes/{visitorNote}/reject', [VisitorNoteController::class, 'reject'])->name('visitor-notes.reject');
+    Route::delete('visitor-notes/{visitorNote}', [VisitorNoteController::class, 'destroy'])->name('visitor-notes.destroy');
 });
 
 Route::middleware('auth')->group(function () {
@@ -61,5 +75,13 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+Route::get('/set-locale/{locale}', function (string $locale) {
+    if (in_array($locale, ['id', 'en'], true)) {
+        session(['locale' => $locale]);
+        cookie()->queue(cookie('locale', $locale, 60 * 24 * 365));
+    }
+    return redirect()->back();
+})->name('locale.switch');
 
 require __DIR__.'/auth.php';

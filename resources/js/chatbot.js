@@ -1,4 +1,29 @@
-export function chatbot() {
+export function chatbot(i18n = {}) {
+    // Fallback ID agar tetap berfungsi jika string terjemahan tidak diteruskan.
+    const t = {
+        greeting: "Halo! 👋 Saya AI Assistant portofolio ini.\nTanyakan apa saja: skills, projects, cara kontak, atau info lainnya!",
+        how_are_you: 'Kabarku baik! Lagi siap bantu-bantu di sini. 😊\nAda yang bisa saya bantu tentang portofolio?',
+        who_are_you: 'Aku AI Assistant portofolio ini! 🤖\nTugasku bantu jelasin tentang projects, skills, atau apapun yang kamu penasaran.',
+        where_from: 'Aku tinggal di web ini aja! 😄\nTapi yang punya portofolio ini dari Indonesia — Full Stack Developer.\nAda yang mau ditanya?',
+        what_doing: 'Lagi nunggu pertanyaan dari kamu! 🫡\nAda yang pengen ditanya tentang portofolio ini?',
+        thanks: 'Sama-sama! 😊\nJangan ragu untuk tanya-tanya lagi ya!',
+        praise: 'Makasih! 🙌 Senang denger kalau kamu suka!\nAda lagi yang mau ditanya?',
+        dont_know: 'Santai aja! 😄\nCoba tanya: skills, projects, contact, CV, about — nanti aku jelasin!',
+        ok: 'Baik! 😊 Ada lagi yang ditanyakan?',
+        hello: 'Halo! Senang bertemu denganmu! 😊\nAda yang bisa saya bantu tentang portofolio ini?',
+        projects: '🚀 Ada beberapa project keren di sini!\nDari Web App, Mobile App, hingga Branding.\nKlik "View All Projects" untuk lihat semuanya!',
+        skills: '💡 Tech stack yang dikuasai:\nLaravel, Vue.js, React, Node.js, MySQL, dan masih banyak lagi.\nCek section Skills untuk detail!',
+        contact: '📬 Tertarik bekerja sama?\nScroll ke section Contact atau klik tombol email di bawah halaman ini!',
+        cv: '📄 CV tersedia untuk didownload!\nScroll ke Hero section dan klik tombol "Download CV".',
+        about: '👨‍💻 Ini portofolio seorang Full Stack Developer.\nScroll ke section About untuk info lengkapnya!',
+        github: '🐙 Link GitHub tersedia di setiap project card!\nKlik project yang kamu minati untuk lihat source code-nya.',
+        blog: '📝 Fitur Blog sedang dalam pengembangan.\nPantau terus update portofolio ini!',
+        price: '💰 Untuk info harga dan paket layanan,\nsilakan hubungi langsung melalui form Contact.\nNanti akan dibalas secepatnya!',
+        experience: '⚡ Pengalaman bisa dilihat di section Experience!\nScroll ke bawah untuk timeline lengkapnya!',
+        fallback: 'Maaf, saya kurang paham maksudnya. 😅\nCoba tanya tentang: projects, skills, contact, CV, about, atau sapa aja!\nAtau langsung hubungi via form Contact ya!',
+        ...i18n,
+    };
+
     return {
         open: false,
         loading: false,
@@ -6,7 +31,7 @@ export function chatbot() {
         messages: [
             {
                 role: 'bot',
-                text: 'Halo! 👋 Saya AI Assistant portofolio ini.\nTanyakan apa saja: skills, projects, cara kontak, atau info lainnya!',
+                text: t.greeting,
                 time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             }
         ],
@@ -66,43 +91,43 @@ export function chatbot() {
         },
 
         getReply(msg) {
-            if (/apa kabar|gimana kabar|baik|kabar|sehat/.test(msg))
-                return 'Kabarku baik! Lagi siap bantu-bantu di sini. 😊\nAda yang bisa saya bantu tentang portofolio?';
-            if (/siapa (nama|kamu)|nama kamu|namamu|lo siapa|lu siapa|kau siapa/.test(msg))
-                return 'Aku AI Assistant portofolio ini! 🤖\nTugasku bantu jelasin tentang projects, skills, atau apapun yang kamu penasaran.';
-            if (/kamu (dari mana|tinggal|asal|dimana)|dari mana/.test(msg))
-                return 'Aku tinggal di web ini aja! 😄\nTapi yang punya portofolio ini dari Indonesia — Full Stack Developer.\nAda yang mau ditanya?';
-            if (/lagi apa|lagi ngapain|sibuk|ngapain/.test(msg))
-                return 'Lagi nunggu pertanyaan dari kamu! 🫡\nAda yang pengen ditanya tentang portofolio ini?';
+            if (/apa kabar|gimana kabar|baik|kabar|sehat|how are you/.test(msg))
+                return t.how_are_you;
+            if (/siapa (nama|kamu)|nama kamu|namamu|lo siapa|lu siapa|kau siapa|who are you|your name/.test(msg))
+                return t.who_are_you;
+            if (/kamu (dari mana|tinggal|asal|dimana)|dari mana|where.*from/.test(msg))
+                return t.where_from;
+            if (/lagi apa|lagi ngapain|sibuk|ngapain|what.*doing|busy/.test(msg))
+                return t.what_doing;
             if (/makasih|terima kasih|thanks|thank you|tq/.test(msg))
-                return 'Sama-sama! 😊\nJangan ragu untuk tanya-tanya lagi ya!';
+                return t.thanks;
             if (/hebat|pinter|keren|mantap|good|nice|great|wow|kereen/.test(msg))
-                return 'Makasih! 🙌 Senang denger kalau kamu suka!\nAda lagi yang mau ditanya?';
-            if (/ga tau|gatau|tidak tahu|nggak tahu|gk tau|bodo|bingung/.test(msg))
-                return 'Santai aja! 😄\nCoba tanya: skills, projects, contact, CV, about — nanti aku jelasin!';
+                return t.praise;
+            if (/ga tau|gatau|tidak tahu|nggak tahu|gk tau|bodo|bingung|don'?t know|i don'?t know/.test(msg))
+                return t.dont_know;
             if (/oke|ok|baik|baiklah|sip|siap|yes|iyes|ya|y/.test(msg) && msg.length < 5)
-                return 'Baik! 😊 Ada lagi yang ditanyakan?';
+                return t.ok;
             if (/halo|hai|hi|hello|hey|pagi|siang|sore|malam/.test(msg))
-                return 'Halo! Senang bertemu denganmu! 😊\nAda yang bisa saya bantu tentang portofolio ini?';
+                return t.hello;
             if (/project|karya|portfolio|work/.test(msg))
-                return '🚀 Ada beberapa project keren di sini!\nDari Web App, Mobile App, hingga Branding.\nKlik "View All Projects" untuk lihat semuanya!';
+                return t.projects;
             if (/skill|teknologi|tech|stack|bahasa/.test(msg))
-                return '💡 Tech stack yang dikuasai:\nLaravel, Vue.js, React, Node.js, MySQL, dan masih banyak lagi.\nCek section Skills untuk detail!';
+                return t.skills;
             if (/kontak|contact|hire|freelance|kerja sama|kolaborasi/.test(msg))
-                return '📬 Tertarik bekerja sama?\nScroll ke section Contact atau klik tombol email di bawah halaman ini!';
+                return t.contact;
             if (/cv|resume|download/.test(msg))
-                return '📄 CV tersedia untuk didownload!\nScroll ke Hero section dan klik tombol "Download CV".';
+                return t.cv;
             if (/about|tentang|profil/.test(msg))
-                return '👨‍💻 Ini portofolio seorang Full Stack Developer.\nScroll ke section About untuk info lengkapnya!';
+                return t.about;
             if (/github|source|code|repo/.test(msg))
-                return '🐙 Link GitHub tersedia di setiap project card!\nKlik project yang kamu minati untuk lihat source code-nya.';
+                return t.github;
             if (/blog|artikel|tulisan/.test(msg))
-                return '📝 Fitur Blog sedang dalam pengembangan.\nPantau terus update portofolio ini!';
+                return t.blog;
             if (/harga|price|biaya|rate|tarif/.test(msg))
-                return '💰 Untuk info harga dan paket layanan,\nsilakan hubungi langsung melalui form Contact.\nNanti akan dibalas secepatnya!';
+                return t.price;
             if (/pengalaman|experience|berapa lama|tahun/.test(msg))
-                return '⚡ Pengalaman bisa dilihat di section Experience!\nScroll ke bawah untuk timeline lengkapnya!';
-            return 'Maaf, saya kurang paham maksudnya. 😅\nCoba tanya tentang: projects, skills, contact, CV, about, atau sapa aja!\nAtau langsung hubungi via form Contact ya!';
+                return t.experience;
+            return t.fallback;
         }
     };
 }

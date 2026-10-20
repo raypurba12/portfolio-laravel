@@ -16,6 +16,9 @@ class ChatbotController extends Controller
         $apiKey = config('services.openrouter.api_key');
         $siteUrl = config('app.url');
         $siteName = config('app.name');
+        $systemPrompt = app()->getLocale() === 'id'
+            ? 'Kamu adalah asisten portofolio pribadi. Jawab pertanyaan tentang skills, projects, pengalaman, edukasi, dan kontak secara ramah dan profesional dalam bahasa Indonesia. Jawab singkat maksimal 3 kalimat. Jangan menyebut bahwa kamu adalah AI atau model bahasa.'
+            : 'You are a personal portfolio assistant. Answer questions about skills, projects, experience, education, and contacts in a friendly and professional manner in English. Answer briefly, max 3 sentences. Do not mention that you are an AI or language model.';
 
         if (!$apiKey || trim($apiKey) === '') {
             return response()->json([
@@ -31,12 +34,12 @@ class ChatbotController extends Controller
                     'X-Title' => $siteName,
                     'HTTP-Referer' => $siteUrl,
                 ])
-                ->post('https://openrouter.ai/api/v1/chat/completions', [
+                ->                post('https://openrouter.ai/api/v1/chat/completions', [
                     'model' => 'openai/gpt-4o-mini',
                     'messages' => [
                         [
                             'role' => 'system',
-                            'content' => 'Kamu adalah asisten portofolio pribadi. Jawab pertanyaan tentang skills, projects, pengalaman, edukasi, dan kontak secara ramah dan profesional dalam bahasa Indonesia. Jawab singkat maksimal 3 kalimat. Jangan menyebut bahwa kamu adalah AI atau model bahasa.',
+                            'content' => $systemPrompt,
                         ],
                         [
                             'role' => 'user',

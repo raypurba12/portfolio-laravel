@@ -8,23 +8,30 @@ use App\Models\Contact;
 use App\Models\Project;
 use App\Models\Service;
 use App\Models\Skill;
-use Illuminate\Support\Facades\Cache;
+use App\Models\VisitorNote;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        $stats = [
-            'projects'     => Cache::remember('admin.total_projects', 300, fn() => Project::count()),
-            'skills'       => Cache::remember('admin.total_skills', 300, fn() => Skill::count()),
-            'certificates' => Cache::remember('admin.total_certificates', 300, fn() => Certificate::count()),
-            'services'     => Cache::remember('admin.total_services', 300, fn() => Service::count()),
-            'contacts'     => Cache::remember('admin.total_messages', 300, fn() => Contact::count()),
-            'unread'       => Cache::remember('admin.unread_messages', 300, fn() => Contact::where('status', 'unread')->count()),
-        ];
+        // Variable names that match admin/dashboard.blade.php
+        $totalMessages       = Contact::count();
+        $unreadMessages      = Contact::where('status', 'unread')->count();
+        $totalProjects       = Project::count();
+        $totalSkills         = Skill::count();
+        $totalCerts          = Certificate::count();
+        $totalServices       = Service::count();
+        $recentContacts      = Contact::latest()->take(5)->get();
+        $totalVisitorNotes   = VisitorNote::count();
+        $pendingVisitorNotes = VisitorNote::where('status', VisitorNote::STATUS_PENDING)->count();
+        $recentVisitorNotes  = VisitorNote::latest()->take(5)->get();
 
-        $recentContacts = Contact::latest()->take(5)->get();
-
-        return view('dashboard', compact('stats', 'recentContacts'));
+        return view('admin.dashboard', compact(
+            'totalMessages', 'unreadMessages',
+            'totalProjects', 'totalSkills',
+            'totalCerts', 'totalServices',
+            'recentContacts',
+            'totalVisitorNotes', 'pendingVisitorNotes', 'recentVisitorNotes'
+        ));
     }
 }

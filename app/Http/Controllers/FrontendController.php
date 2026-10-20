@@ -13,6 +13,7 @@ use App\Models\Project;
 use App\Models\Service;
 use App\Models\Skill;
 use App\Models\SocialMedia;
+use App\Models\VisitorNote;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -38,14 +39,18 @@ class FrontendController extends Controller
                 'certificates' => Certificate::orderByDesc('issued_at')->take(6)->get(),
                 'socialMedias' => SocialMedia::where('is_active', true)->orderBy('order')->get(),
                 'settings'       => Setting::batchGet([
-                    'site_title', 'site_description', 'site_footer',
-                    'site_email', 'site_phone', 'site_address',
+                    'site_title', 'site_description', 'site_keywords', 'site_twitter_username',
+                    'site_footer', 'site_email', 'site_phone', 'site_address',
                     'google_analytics', 'google_maps_embed',
-                    'logo_path', 'favicon_path',
+                    'logo_path', 'favicon_path', 'seo_og_image_path',
                 ]),
                 'heroBackgrounds' => HeroBackground::active()->ordered()->get(),
             ];
         });
+
+        // Hanya notes berstatus approved yang ditampilkan publik.
+        // Disengaja di luar cache agar note baru tampil segera setelah di-approve.
+        $data['visitorNotes'] = VisitorNote::approved()->latest()->take(12)->get();
 
         return view('welcome', $data);
     }
@@ -57,7 +62,10 @@ class FrontendController extends Controller
                         ->latest('date')
                         ->paginate(9);
 
-        $settings = Setting::batchGet(['site_title', 'site_description', 'site_footer', 'google_analytics']);
+        $settings = Setting::batchGet([
+            'site_title', 'site_description', 'site_keywords', 'site_twitter_username',
+            'site_footer', 'google_analytics', 'logo_path', 'favicon_path', 'seo_og_image_path'
+        ]);
 
         return view('frontend.projects.index', compact('projects', 'settings'));
     }
@@ -67,7 +75,10 @@ class FrontendController extends Controller
         abort_if($project->status !== 'published', 404);
         $project->load(['category', 'images']);
 
-        $settings = Setting::batchGet(['site_title', 'site_description', 'site_footer', 'google_analytics']);
+        $settings = Setting::batchGet([
+            'site_title', 'site_description', 'site_keywords', 'site_twitter_username',
+            'site_footer', 'google_analytics', 'logo_path', 'favicon_path', 'seo_og_image_path'
+        ]);
 
         return view('frontend.projects.show', compact('project', 'settings'));
     }
@@ -79,10 +90,6 @@ class FrontendController extends Controller
             'email'   => 'required|email|max:255',
             'subject' => 'nullable|string|max:255',
             'message' => 'required|string|min:10',
-        ], [], [
-            'name' => 'Name',
-            'email' => 'Email',
-            'message' => 'Message',
         ]);
 
         Contact::create([
@@ -97,6 +104,25 @@ class FrontendController extends Controller
         Cache::forget('frontend.home');
 
         return redirect()->to(route('home') . '#contact')
-            ->with('contact_success', 'Thank you! Your message has been sent successfully.');
+            ->with('contact_success', __('contact.success_sent'));
+    }
+
+    public function visitorNoteStore(Request $request)
+    {
+        $validated = $request->validate([
+            'name'    => 'required|string|max:60',
+            'message' => 'required|string|min:3|max:500',
+        ]);
+
+        VisitorNote::create([
+            'name'    => $validated['name'],
+            'message' => $validated['message'],
+            'status'  => VisitorNote::STATUS_PENDING,
+        ]);
+
+        Cache::forget('frontend.home');
+
+        return redirect()->to(route('home') . '#visitor-notes')
+            ->with('visitor_note_success', $validated['name']);
     }
 }

@@ -1,0 +1,8 @@
+Model Information:
+* title:	AI Robot
+* source:	https://sketchfab.com/3d-models/ai-robot-f7c4e4dcd1594e3e92b2d35a4ec8a93a
+* author:	Noores (https://sketchfab.com/nuks)
+
+Model License:
+* license type:	SKETCHFAB Standard (https://sketchfab.com/licenses)
+* requirements:	Under basic restrictions, use worldwide, on all types of media, commercially or not, and in all types of derivative works

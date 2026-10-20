@@ -23,6 +23,16 @@
                                 class="mt-1 block w-full border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">{{ old('site_description', $settings['site_description'] ?? '') }}</textarea>
                         </div>
                         <div>
+                            <x-input-label for="site_keywords" value="Meta Keywords (comma separated)"/>
+                            <x-text-input id="site_keywords" name="site_keywords" type="text" class="mt-1 block w-full"
+                                :value="old('site_keywords', $settings['site_keywords'] ?? '')" placeholder="web development, laravel, portfolio, developer"/>
+                        </div>
+                        <div>
+                            <x-input-label for="site_twitter_username" value="Twitter Username (with @)"/>
+                            <x-text-input id="site_twitter_username" name="site_twitter_username" type="text" class="mt-1 block w-full"
+                                :value="old('site_twitter_username', $settings['site_twitter_username'] ?? '')" placeholder="@username"/>
+                        </div>
+                        <div>
                             <x-input-label for="site_footer" value="Footer Text"/>
                             <x-text-input id="site_footer" name="site_footer" type="text" class="mt-1 block w-full"
                                 :value="old('site_footer', $settings['site_footer'] ?? '')"/>
@@ -98,6 +108,19 @@
                     @endif
                     <x-file-input id="favicon" name="favicon" class="block w-full"/>
                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">ICO/PNG, max 512KB</p>
+                </div>
+
+                {{-- Default OG Image --}}
+                <div class="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-6">
+                    <p class="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-5 pb-3 border-b border-slate-200 dark:border-slate-700">Default OG Image (Social Share)</p>
+                    @if(!empty($settings['seo_og_image_path']))
+                    <img src="{{ Storage::url($settings['seo_og_image_path']) }}"
+                         class="w-full h-32 object-cover mb-3 bg-slate-100 dark:bg-slate-700 rounded-lg p-2">
+                    @else
+                    <div class="h-32 bg-slate-100 dark:bg-slate-700 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 text-xs mb-3">No custom share image</div>
+                    @endif
+                    <x-file-input id="seo_og_image" name="seo_og_image" class="block w-full"/>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">PNG/JPG recommended (1200x630px), max 2MB</p>
                 </div>
 
                 <button type="submit"

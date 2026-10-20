@@ -58,6 +58,17 @@
             @endif
         </a>
 
+        <a href="{{ route('admin.visitor-notes.index') }}"
+           class="sidebar-link {{ request()->routeIs('admin.visitor-notes.*') ? 'active' : '' }}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 3h4a1 1 0 011 1v4M3 5a2 2 0 012-2h4m8 18h4a1 1 0 001-1v-4M6 19a2 2 0 01-2-2v-4m4-6h.01m3.99 0h.01M12 17h.01M8 17h.01M13 7h.01M17 7h.01M7 12h.01M17 12h.01"/>
+            </svg>
+            Visitor Notes
+            @if(($pendingVisitorNoteCount ?? 0) > 0)
+            <span class="ml-auto bg-amber-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">{{ $pendingVisitorNoteCount }}</span>
+            @endif
+        </a>
+
         <p class="px-3 pt-5 pb-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">Settings</p>
 
         <a href="{{ route('admin.social-media.index') }}"

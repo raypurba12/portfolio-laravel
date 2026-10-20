@@ -1,6 +1,6 @@
 {
   "resources/css/app.css": {
-    "file": "assets/app-CV1PaXNw.css",
+    "file": "assets/app-Dx_9Pfzj.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -9,9 +9,21 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-UsGpXPro.js",
+    "file": "assets/app-0xxbKcbI.js",
     "name": "app",
     "src": "resources/js/app.js",
-    "isEntry": true
+    "isEntry": true,
+    "dynamicImports": [
+      "resources/js/visitor-robot.js"
+    ],
+    "css": [
+      "assets/app-CswrOmLV.css"
+    ]
+  },
+  "resources/js/visitor-robot.js": {
+    "file": "assets/visitor-robot-CNyxVDQH.js",
+    "name": "visitor-robot",
+    "src": "resources/js/visitor-robot.js",
+    "isDynamicEntry": true
   }
 }
